@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
 import { api } from '../lib/api'
 import type { ItemHoje } from '../lib/types'
-import { IconCheck, IconInbox } from '../components/icons'
+import { IconCheck, IconFlame, IconInbox } from '../components/icons'
 
 const dataDeHoje = new Intl.DateTimeFormat('pt-BR', {
   weekday: 'long',
@@ -11,6 +12,7 @@ const dataDeHoje = new Intl.DateTimeFormat('pt-BR', {
 
 export function Hoje() {
   const queryClient = useQueryClient()
+  const [areaSelecionada, setAreaSelecionada] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['hoje'],
@@ -30,6 +32,20 @@ export function Hoje() {
   const itens = data ?? []
   const concluidas = itens.filter((item) => item.concluidoHoje).length
   const percentualDia = itens.length > 0 ? Math.round((concluidas / itens.length) * 100) : 0
+
+  const areas = useMemo(() => {
+    const mapa = new Map<string, { id: string; nome: string; cor: string | null }>()
+    for (const item of data ?? []) {
+      if (!mapa.has(item.areaId)) {
+        mapa.set(item.areaId, { id: item.areaId, nome: item.areaNome, cor: item.areaCorTema })
+      }
+    }
+    return [...mapa.values()]
+  }, [data])
+
+  const itensFiltrados = areaSelecionada
+    ? itens.filter((item) => item.areaId === areaSelecionada)
+    : itens
 
   return (
     <div className="space-y-8">
@@ -76,8 +92,46 @@ export function Hoje() {
         </div>
       )}
 
+      {!isLoading && areas.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setAreaSelecionada(null)}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              areaSelecionada === null
+                ? 'bg-accent text-accent-ink'
+                : 'bg-surface-2 text-ink-muted hover:text-ink'
+            }`}
+          >
+            Todas
+          </button>
+          {areas.map((area) => (
+            <button
+              key={area.id}
+              type="button"
+              onClick={() => setAreaSelecionada(area.id === areaSelecionada ? null : area.id)}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                areaSelecionada === area.id
+                  ? 'bg-accent text-accent-ink'
+                  : 'bg-surface-2 text-ink-muted hover:text-ink'
+              }`}
+            >
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: area.cor ?? 'currentColor' }}
+              />
+              {area.nome}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && itens.length > 0 && itensFiltrados.length === 0 && (
+        <p className="py-8 text-center text-sm text-ink-faint">Nada planejado hoje nessa área.</p>
+      )}
+
       <ul className="space-y-2">
-        {itens.map((item) => (
+        {itensFiltrados.map((item) => (
           <li
             key={item.atividadeId}
             className="animate-rise group flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition-colors hover:border-line-strong"
@@ -107,6 +161,15 @@ export function Hoje() {
                 {item.areaNome} · {item.objetivoDescricao}
               </p>
             </div>
+            {item.streakAtual > 0 && (
+              <div
+                className="flex shrink-0 items-center gap-1 rounded-full bg-warning-soft px-2 py-1 text-xs font-medium text-warning"
+                title={`${item.streakAtual} ${item.streakAtual === 1 ? 'vez seguida' : 'vezes seguidas'}`}
+              >
+                <IconFlame className="h-3.5 w-3.5" />
+                {item.streakAtual}
+              </div>
+            )}
           </li>
         ))}
       </ul>

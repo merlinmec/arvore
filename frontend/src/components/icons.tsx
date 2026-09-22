@@ -91,6 +91,14 @@ export function IconLogOut(props: IconProps) {
   )
 }
 
+export function IconFlame(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 2.5c.6 2 .2 3.4-.8 4.6-1 1.2-2.3 2-2.3 4.1 0 2.6 2 4.8 3.9 4.8-.7-1-1-1.9-.7-2.9.3-1 1-1.5 1.2-2.6.8 1 1.7 2.2 1.7 3.9 0 2.6-2.1 4.6-4.7 4.6-2.9 0-5.3-2.3-5.3-5.6 0-4.2 3.2-5.8 4.4-8.3.4-.9.5-1.8.6-2.6z" />
+    </svg>
+  )
+}
+
 export function IconInbox(props: IconProps) {
   return (
     <svg {...base} {...props}>

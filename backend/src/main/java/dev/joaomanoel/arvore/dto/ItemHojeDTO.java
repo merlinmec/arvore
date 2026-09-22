@@ -9,4 +9,5 @@ public record ItemHojeDTO(
         UUID areaId,
         String areaNome,
         String areaCorTema,
-        boolean concluidoHoje) {}
+        boolean concluidoHoje,
+        int streakAtual) {}

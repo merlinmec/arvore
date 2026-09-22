@@ -4,6 +4,8 @@ import dev.joaomanoel.arvore.dto.ItemHojeDTO;
 import dev.joaomanoel.arvore.entity.AgendaSemanal;
 import dev.joaomanoel.arvore.entity.Area;
 import dev.joaomanoel.arvore.entity.Atividade;
+import dev.joaomanoel.arvore.entity.Conclusao;
+import dev.joaomanoel.arvore.entity.DiaSemana;
 import dev.joaomanoel.arvore.entity.Objetivo;
 import dev.joaomanoel.arvore.repository.AgendaSemanalRepository;
 import dev.joaomanoel.arvore.repository.AreaRepository;
@@ -13,10 +15,15 @@ import dev.joaomanoel.arvore.repository.ObjetivoRepository;
 import dev.joaomanoel.arvore.util.Datas;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
 public class HojeService {
+
+    private static final int JANELA_STREAK_DIAS = 180;
 
     private final AgendaSemanalRepository agendaSemanalRepository;
     private final AtividadeRepository atividadeRepository;
@@ -69,6 +76,38 @@ public class HojeService {
                 area.getId(),
                 area.getNome(),
                 area.getCorTema(),
-                concluidoHoje);
+                concluidoHoje,
+                calcularStreak(atividade.getId(), hoje, concluidoHoje));
+    }
+
+    private int calcularStreak(UUID atividadeId, LocalDate hoje, boolean concluidoHoje) {
+        Set<DiaSemana> diasAgendados =
+                agendaSemanalRepository.findAllByAtividadeId(atividadeId).stream()
+                        .map(AgendaSemanal::getDiaSemana)
+                        .collect(Collectors.toSet());
+        if (diasAgendados.isEmpty()) {
+            return 0;
+        }
+
+        LocalDate inicioJanela = hoje.minusDays(JANELA_STREAK_DIAS);
+        Set<LocalDate> concluidas =
+                conclusaoRepository.findAllByAtividadeIdInAndDataBetween(
+                                List.of(atividadeId), inicioJanela, hoje)
+                        .stream()
+                        .map(Conclusao::getData)
+                        .collect(Collectors.toSet());
+
+        int streak = 0;
+        LocalDate data = concluidoHoje ? hoje : hoje.minusDays(1);
+        while (!data.isBefore(inicioJanela)) {
+            if (diasAgendados.contains(Datas.diaSemanaDe(data))) {
+                if (!concluidas.contains(data)) {
+                    break;
+                }
+                streak++;
+            }
+            data = data.minusDays(1);
+        }
+        return streak;
     }
 }
