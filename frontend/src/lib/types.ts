@@ -81,4 +81,5 @@ export interface ItemHoje {
   areaNome: string
   areaCorTema: string | null
   concluidoHoje: boolean
+  streakAtual: number
 }
