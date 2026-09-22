@@ -1,0 +1,17 @@
+# Copie para application-local.yml (git-ignorado) e preencha com valores reais.
+# Rode com: mvn spring-boot:run -Dspring-boot.run.profiles=local
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/arvore
+    username: arvore
+    password: arvore
+
+arvore:
+  auth:
+    usuario: joao
+    # gere com: htpasswd -bnBC 10 "" "sua-senha" | tr -d ':\n' | sed 's/^\$2y/\$2a/'
+    # ou qualquer gerador de hash bcrypt
+    senha-hash: ""
+  jwt:
+    segredo: "troque-por-uma-string-aleatoria-com-pelo-menos-32-caracteres"
