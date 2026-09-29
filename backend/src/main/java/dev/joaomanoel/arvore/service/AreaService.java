@@ -7,6 +7,7 @@ import dev.joaomanoel.arvore.dto.EditarAreaRequest;
 import dev.joaomanoel.arvore.dto.ProgressoDTO;
 import dev.joaomanoel.arvore.entity.Area;
 import dev.joaomanoel.arvore.entity.Atividade;
+import dev.joaomanoel.arvore.exception.NaoEncontradoException;
 import dev.joaomanoel.arvore.repository.AreaRepository;
 import dev.joaomanoel.arvore.repository.AtividadeRepository;
 import dev.joaomanoel.arvore.repository.ObjetivoRepository;
@@ -63,7 +64,7 @@ public class AreaService {
         Area area =
                 areaRepository
                         .findById(id)
-                        .orElseThrow(() -> new IllegalArgumentException("Área não encontrada"));
+                        .orElseThrow(() -> new NaoEncontradoException("Área não encontrada"));
         area.setNome(requisicao.nome());
         area.setDescricaoGeral(requisicao.descricaoGeral());
         area.setCorTema(requisicao.corTema());

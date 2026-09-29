@@ -25,3 +25,17 @@ export function encontrarArea(areas: AreaArvore[], id: string): AreaArvore | nul
   }
   return null
 }
+
+/** Caminho da raiz até a área (inclusive), pra breadcrumb. Vazio se não encontrar. */
+export function caminhoAte(areas: AreaArvore[], id: string): AreaArvore[] {
+  for (const area of areas) {
+    if (area.id === id) {
+      return [area]
+    }
+    const abaixo = caminhoAte(area.filhos, id)
+    if (abaixo.length > 0) {
+      return [area, ...abaixo]
+    }
+  }
+  return []
+}

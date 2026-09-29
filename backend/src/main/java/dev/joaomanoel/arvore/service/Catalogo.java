@@ -1,0 +1,135 @@
+package dev.joaomanoel.arvore.service;
+
+import dev.joaomanoel.arvore.entity.AgendaSemanal;
+import dev.joaomanoel.arvore.entity.Area;
+import dev.joaomanoel.arvore.entity.Atividade;
+import dev.joaomanoel.arvore.entity.DiaSemana;
+import dev.joaomanoel.arvore.entity.Objetivo;
+import dev.joaomanoel.arvore.entity.StatusObjetivo;
+import dev.joaomanoel.arvore.util.Consistencia.Rotina;
+import dev.joaomanoel.arvore.util.Datas;
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+/**
+ * Retrato em memória da árvore inteira (áreas, objetivos, atividades e grade semanal), carregado
+ * em quatro queries por {@link CatalogoService}. Existe pra Hoje e Insights não fazerem uma query
+ * por atividade: o app é single-user, então o volume cabe folgado em memória.
+ */
+public class Catalogo {
+
+    private final Map<UUID, Area> areas;
+    private final Map<UUID, Objetivo> objetivos;
+    private final Map<UUID, Atividade> atividades;
+    private final Map<UUID, Rotina> rotinas;
+    private final Map<UUID, List<Area>> filhosPorPai;
+
+    Catalogo(
+            Collection<Area> areas,
+            Collection<Objetivo> objetivos,
+            Collection<Atividade> atividades,
+            Collection<AgendaSemanal> agendas) {
+        this.areas = indexar(areas, Area::getId);
+        this.objetivos = indexar(objetivos, Objetivo::getId);
+        this.atividades = indexar(atividades, Atividade::getId);
+        this.filhosPorPai =
+                areas.stream()
+                        .filter(area -> area.getAreaPaiId() != null)
+                        .collect(Collectors.groupingBy(Area::getAreaPaiId));
+
+        Map<UUID, Set<DiaSemana>> diasPorAtividade =
+                agendas.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        AgendaSemanal::getAtividadeId,
+                                        Collectors.mapping(
+                                                AgendaSemanal::getDiaSemana,
+                                                Collectors.toCollection(() -> EnumSet.noneOf(DiaSemana.class)))));
+        this.rotinas =
+                atividades.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        Atividade::getId,
+                                        atividade ->
+                                                new Rotina(
+                                                        atividade.getId(),
+                                                        Datas.dataDe(atividade.getCriadoEm()),
+                                                        diasPorAtividade.getOrDefault(
+                                                                atividade.getId(),
+                                                                EnumSet.noneOf(DiaSemana.class)))));
+    }
+
+    private static <T> Map<UUID, T> indexar(Collection<T> itens, Function<T, UUID> id) {
+        return itens.stream().collect(Collectors.toMap(id, Function.identity()));
+    }
+
+    public Area area(UUID id) {
+        return areas.get(id);
+    }
+
+    public boolean existeArea(UUID id) {
+        return areas.containsKey(id);
+    }
+
+    public Objetivo objetivoDe(Atividade atividade) {
+        return objetivos.get(atividade.getObjetivoId());
+    }
+
+    public Area areaDe(Atividade atividade) {
+        return areas.get(objetivoDe(atividade).getAreaId());
+    }
+
+    public Rotina rotina(UUID atividadeId) {
+        return rotinas.get(atividadeId);
+    }
+
+    /**
+     * Atividades que contam como plano: objetivo ATIVO e, havendo filtro, dentro da área filtrada ou
+     * de qualquer descendente dela.
+     */
+    public List<Atividade> atividadesEmCurso(UUID areaFiltro) {
+        Set<UUID> areasPermitidas = areaFiltro == null ? null : comDescendentes(areaFiltro);
+        return atividades.values().stream()
+                .filter(atividade -> objetivoDe(atividade).getStatus() == StatusObjetivo.ATIVO)
+                .filter(
+                        atividade ->
+                                areasPermitidas == null
+                                        || areasPermitidas.contains(areaDe(atividade).getId()))
+                .toList();
+    }
+
+    public Set<UUID> comDescendentes(UUID areaId) {
+        Set<UUID> resultado = new HashSet<>();
+        Deque<UUID> pendentes = new ArrayDeque<>(List.of(areaId));
+        while (!pendentes.isEmpty()) {
+            UUID atual = pendentes.pop();
+            if (resultado.add(atual)) {
+                filhosPorPai.getOrDefault(atual, List.of()).forEach(filho -> pendentes.push(filho.getId()));
+            }
+        }
+        return resultado;
+    }
+
+    /**
+     * O galho em que uma área se agrupa num gráfico. Sem filtro, é a raiz da árvore; com filtro, é o
+     * filho direto do filtro no caminho até ela (ou o próprio filtro, quando a área é ele).
+     */
+    public Area ramoDe(UUID areaId, UUID areaFiltro) {
+        Area atual = areas.get(areaId);
+        while (!atual.getId().equals(areaFiltro)
+                && atual.getAreaPaiId() != null
+                && !atual.getAreaPaiId().equals(areaFiltro)) {
+            atual = areas.get(atual.getAreaPaiId());
+        }
+        return atual;
+    }
+}
