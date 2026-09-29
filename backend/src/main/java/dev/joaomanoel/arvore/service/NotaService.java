@@ -12,6 +12,7 @@ import dev.joaomanoel.arvore.repository.NotaRepository;
 import dev.joaomanoel.arvore.repository.TagRepository;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -71,12 +72,14 @@ public class NotaService {
 
     @Transactional(readOnly = true)
     public List<NotaComAreaDTO> buscarPorTag(String tagNome) {
-        String normalizado = normalizarTag(tagNome);
+        List<Nota> notas = notaRepository.buscarPorTag(normalizarTag(tagNome));
+        Map<UUID, String> nomesDasAreas =
+                areaRepository
+                        .findAllById(notas.stream().map(Nota::getAreaId).collect(Collectors.toSet()))
+                        .stream()
+                        .collect(Collectors.toMap(Area::getId, Area::getNome));
 
-        return notaRepository.findAll().stream()
-                .filter(nota -> nota.getTags().stream().anyMatch(tag -> tag.getNome().equals(normalizado)))
-                .map(this::paraComAreaDTO)
-                .toList();
+        return notas.stream().map(nota -> paraComAreaDTO(nota, nomesDasAreas.get(nota.getAreaId()))).toList();
     }
 
     private Set<Tag> resolverTags(List<String> nomes) {
@@ -117,15 +120,11 @@ public class NotaService {
                 nota.getAtualizadoEm());
     }
 
-    private NotaComAreaDTO paraComAreaDTO(Nota nota) {
-        Area area =
-                areaRepository
-                        .findById(nota.getAreaId())
-                        .orElseThrow(() -> new IllegalStateException("Área não encontrada"));
+    private NotaComAreaDTO paraComAreaDTO(Nota nota, String nomeDaArea) {
         return new NotaComAreaDTO(
                 nota.getId(),
                 nota.getAreaId(),
-                area.getNome(),
+                nomeDaArea,
                 nota.getTitulo(),
                 nota.getCorpo(),
                 tagsOrdenadas(nota),
