@@ -66,7 +66,7 @@ Valem para qualquer feature nova, no backend ou no frontend.
 
 Inspiração: Loop Habit Tracker, Streaks, "Goal-Tab".
 
-- [ ] **Grade semanal versionada:** `agenda_semanal` ganha `vigente_de`/`vigente_ate`. Hoje, mudar os dias de uma atividade reescreve o "planejado" do passado; essa é a principal limitação conhecida do cálculo
+- [x] **Grade semanal versionada** (29/09/2026): `agenda_semanal` ganhou `vigente_de`/`vigente_ate`. Mudar os dias de uma atividade vale a partir de hoje e não reescreve mais o "planejado" do passado
 - [ ] **Frequência flexível:** além de dias fixos, "N vezes por semana" em qualquer dia
 - [ ] **Meta quantitativa no objetivo:** ex. "correr 100 km até dezembro"; a conclusão pode registrar um valor (5 km) e o objetivo mostra o acumulado contra a meta e o ritmo necessário até o prazo
 - [ ] **Hábito negativo:** "não fumar", onde o registro é a falha
@@ -101,11 +101,11 @@ Inspiração: Sunsama, Clockify, Habi.
 
 | Onde | Problema | Correção sugerida |
 |---|---|---|
-| `agenda_semanal` | Sem histórico de versões (ver Fase 2) | `vigente_de`/`vigente_ate` |
 | Tabela `tag` | Tag que ficou sem nenhuma nota continua no banco e aparece em `GET /api/tags` | Apagar tags órfãs ao editar/excluir nota, ou listar só as que têm nota |
 
 ### Resolvida (29/09/2026)
 
 - **N+1 em Áreas e Objetivos:** a árvore de áreas e a lista de objetivos agora usam o `Catalogo` e uma query de conclusões da semana (`ProgressoService.semanaAtual`). Antes eram várias queries por objetivo e por atividade.
 - **Progresso semanal alinhado com Hoje e Painel:** passa por `Consistencia.progresso`. Na área, só contam objetivos ativos; nenhum dia antes da criação da atividade conta como planejado; conclusão em dia fora da grade não conta.
+- **Grade sem histórico:** resolvida pela grade versionada da Fase 2.
 - **Busca de notas por tag:** feita no banco (subquery em `nota_tag`, tags carregadas junto, mais recentes primeiro), e os nomes das áreas vêm numa query só.

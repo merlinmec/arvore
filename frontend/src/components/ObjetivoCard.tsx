@@ -87,7 +87,7 @@ function AtividadeItem({ atividade, areaId, cor }: { atividade: Atividade; areaI
                 onClick={() => alternarDia.mutate(valor)}
                 aria-pressed={ativo}
                 aria-label={`${ativo ? 'Tirar' : 'Colocar'} ${atividade.nome} na ${NOMES_DIA[valor]}`}
-                title={label}
+                title={`${label}: a mudança vale a partir de hoje, o histórico não muda`}
                 className={`flex h-6 w-6 items-center justify-center rounded-[5px] text-[10px] font-semibold transition-colors duration-150 ${
                   ativo ? 'text-canvas' : 'bg-surface-3 text-ink-faint hover:text-ink-muted'
                 }`}

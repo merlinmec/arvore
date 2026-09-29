@@ -5,8 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import dev.joaomanoel.arvore.dto.ProgressoDTO;
 import dev.joaomanoel.arvore.entity.DiaSemana;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
+import dev.joaomanoel.arvore.util.Consistencia.Vigencia;
 import java.time.LocalDate;
-import java.util.EnumSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +23,10 @@ class ConsistenciaTest {
     private static final LocalDate LIMITE = SEGUNDA.minusDays(180);
 
     private static Rotina rotina(LocalDate inicio, DiaSemana... dias) {
-        return new Rotina(UUID.randomUUID(), inicio, EnumSet.copyOf(Set.of(dias)));
+        return new Rotina(
+                UUID.randomUUID(),
+                inicio,
+                Arrays.stream(dias).map(dia -> new Vigencia(dia, inicio, null)).toList());
     }
 
     private final Rotina segQuaSex =
@@ -34,6 +38,47 @@ class ConsistenciaTest {
 
         assertThat(nova.planejadaEm(SEGUNDA)).isFalse();
         assertThat(nova.planejadaEm(QUARTA)).isTrue();
+    }
+
+    @Test
+    void mudarAGradeNaoReescreveOPassado() {
+        // Treinava segunda até esta semana; a partir desta quarta passou a treinar quarta.
+        Rotina trocouDeDia =
+                new Rotina(
+                        UUID.randomUUID(),
+                        SEGUNDA.minusWeeks(4),
+                        List.of(
+                                new Vigencia(DiaSemana.SEGUNDA, SEGUNDA.minusWeeks(4), QUARTA),
+                                new Vigencia(DiaSemana.QUARTA, QUARTA, null)));
+
+        assertThat(trocouDeDia.planejadaEm(SEGUNDA.minusWeeks(1))).isTrue();
+        assertThat(trocouDeDia.planejadaEm(QUARTA.minusWeeks(1))).isFalse();
+        assertThat(trocouDeDia.planejadaEm(SEGUNDA)).isTrue();
+        assertThat(trocouDeDia.planejadaEm(QUARTA)).isTrue();
+        assertThat(trocouDeDia.planejadaEm(SEGUNDA.plusWeeks(1))).isFalse();
+        assertThat(trocouDeDia.diasAtuais()).containsExactly(DiaSemana.QUARTA);
+    }
+
+    @Test
+    void sequenciaAtravessaATrocaDeGrade() {
+        Rotina trocouDeDia =
+                new Rotina(
+                        UUID.randomUUID(),
+                        SEGUNDA.minusWeeks(4),
+                        List.of(
+                                new Vigencia(DiaSemana.SEGUNDA, SEGUNDA.minusWeeks(4), QUARTA),
+                                new Vigencia(DiaSemana.QUARTA, QUARTA, null)));
+        Set<LocalDate> feitas = Set.of(SEGUNDA.minusWeeks(1), SEGUNDA, QUARTA);
+
+        assertThat(Consistencia.sequenciaAtual(trocouDeDia, feitas, QUARTA, LIMITE)).isEqualTo(3);
+    }
+
+    @Test
+    void diasAtuaisSaemDeSegundaADomingo() {
+        Rotina rotina = rotina(SEGUNDA, DiaSemana.DOMINGO, DiaSemana.SEGUNDA, DiaSemana.QUARTA);
+
+        assertThat(rotina.diasAtuais())
+                .containsExactly(DiaSemana.SEGUNDA, DiaSemana.QUARTA, DiaSemana.DOMINGO);
     }
 
     @Test

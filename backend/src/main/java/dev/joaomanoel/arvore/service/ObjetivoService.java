@@ -91,6 +91,6 @@ public class ObjetivoService {
 
     private AtividadeDTO paraDTO(Atividade atividade, Rotina rotina) {
         return new AtividadeDTO(
-                atividade.getId(), atividade.getObjetivoId(), atividade.getNome(), List.copyOf(rotina.dias()));
+                atividade.getId(), atividade.getObjetivoId(), atividade.getNome(), rotina.diasAtuais());
     }
 }
