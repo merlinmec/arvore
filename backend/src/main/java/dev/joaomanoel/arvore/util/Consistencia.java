@@ -1,7 +1,10 @@
 package dev.joaomanoel.arvore.util;
 
+import dev.joaomanoel.arvore.dto.ProgressoDTO;
 import dev.joaomanoel.arvore.entity.DiaSemana;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -64,6 +67,31 @@ public final class Consistencia {
             }
         }
         return maior;
+    }
+
+    /**
+     * Planejado x concluído das rotinas dentro de [inicio, fim]. Só conta como concluído o que caiu
+     * num dia planejado, então o percentual nunca passa de 100%.
+     */
+    public static ProgressoDTO progresso(
+            Collection<Rotina> rotinas,
+            Map<UUID, Set<LocalDate>> concluidas,
+            LocalDate inicio,
+            LocalDate fim) {
+        int planejado = 0;
+        int concluido = 0;
+        for (Rotina rotina : rotinas) {
+            Set<LocalDate> feitas = concluidas.getOrDefault(rotina.atividadeId(), Set.of());
+            for (LocalDate data = inicio; !data.isAfter(fim); data = data.plusDays(1)) {
+                if (rotina.planejadaEm(data)) {
+                    planejado++;
+                    if (feitas.contains(data)) {
+                        concluido++;
+                    }
+                }
+            }
+        }
+        return ProgressoCalculo.calcular(planejado, concluido);
     }
 
     /** Taxa inteira 0–100, ou null quando nada foi planejado. */
