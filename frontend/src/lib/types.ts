@@ -41,6 +41,8 @@ export interface Atividade {
   objetivoId: string
   nome: string
   diasAgendados: DiaSemana[]
+  /** Preenchido quando a atividade segue uma meta semanal em vez de dias fixos. */
+  vezesPorSemana: number | null
 }
 
 export interface ObjetivoComAtividades {
@@ -83,6 +85,9 @@ export interface ItemHoje {
   areaCorTema: string | null
   concluido: boolean
   streakAtual: number
+  /** Só nas atividades com meta semanal: a meta e quantas vezes já foram feitas na semana até o dia. */
+  metaSemanal: number | null
+  feitasNaSemana: number | null
 }
 
 export interface DiaHoje {

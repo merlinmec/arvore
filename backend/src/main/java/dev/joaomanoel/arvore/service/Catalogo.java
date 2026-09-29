@@ -3,8 +3,10 @@ package dev.joaomanoel.arvore.service;
 import dev.joaomanoel.arvore.entity.AgendaSemanal;
 import dev.joaomanoel.arvore.entity.Area;
 import dev.joaomanoel.arvore.entity.Atividade;
+import dev.joaomanoel.arvore.entity.FrequenciaSemanal;
 import dev.joaomanoel.arvore.entity.Objetivo;
 import dev.joaomanoel.arvore.entity.StatusObjetivo;
+import dev.joaomanoel.arvore.util.Consistencia.Cota;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
 import dev.joaomanoel.arvore.util.Consistencia.Vigencia;
 import dev.joaomanoel.arvore.util.Datas;
@@ -21,8 +23,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Retrato em memória da árvore inteira (áreas, objetivos, atividades e grade semanal), carregado
- * em quatro queries por {@link CatalogoService}. Existe pra nenhuma tela fazer uma query por
+ * Retrato em memória da árvore inteira (áreas, objetivos, atividades, grade semanal e metas semanais), carregado
+ * em cinco queries por {@link CatalogoService}. Existe pra nenhuma tela fazer uma query por
  * atividade: o app é single-user, então o volume cabe folgado em memória. Listas preservam a ordem
  * de carga (áreas por {@code ordem}).
  */
@@ -40,7 +42,8 @@ public class Catalogo {
             Collection<Area> areas,
             Collection<Objetivo> objetivos,
             Collection<Atividade> atividades,
-            Collection<AgendaSemanal> agendas) {
+            Collection<AgendaSemanal> agendas,
+            Collection<FrequenciaSemanal> frequencias) {
         this.areas = indexar(areas, Area::getId);
         this.objetivos = indexar(objetivos, Objetivo::getId);
         this.atividades = indexar(atividades, Atividade::getId);
@@ -64,6 +67,18 @@ public class Catalogo {
                                                                 agenda.getVigenteDe(),
                                                                 agenda.getVigenteAte()),
                                                 Collectors.toList())));
+        Map<UUID, List<Cota>> cotasPorAtividade =
+                frequencias.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        FrequenciaSemanal::getAtividadeId,
+                                        Collectors.mapping(
+                                                frequencia ->
+                                                        new Cota(
+                                                                frequencia.getVezes(),
+                                                                frequencia.getVigenteDe(),
+                                                                frequencia.getVigenteAte()),
+                                                Collectors.toList())));
         this.rotinas =
                 atividades.stream()
                         .collect(
@@ -74,6 +89,8 @@ public class Catalogo {
                                                         atividade.getId(),
                                                         Datas.dataDe(atividade.getCriadoEm()),
                                                         gradePorAtividade.getOrDefault(
+                                                                atividade.getId(), List.of()),
+                                                        cotasPorAtividade.getOrDefault(
                                                                 atividade.getId(), List.of()))));
     }
 

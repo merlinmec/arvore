@@ -11,4 +11,7 @@ public record ItemHojeDTO(
         String areaNome,
         String areaCorTema,
         boolean concluido,
-        int streakAtual) {}
+        int streakAtual,
+        // Só nas atividades com meta semanal: a meta e quantas vezes já foram feitas na semana até o dia.
+        Integer metaSemanal,
+        Integer feitasNaSemana) {}

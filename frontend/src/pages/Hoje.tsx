@@ -125,12 +125,25 @@ function ItemAtividade({
         >
           {item.atividadeNome}
         </p>
-        <p className="mt-0.5 truncate text-xs text-ink-faint">{item.objetivoDescricao}</p>
+        <p className="mt-0.5 truncate text-xs text-ink-faint">
+          {item.objetivoDescricao}
+          {item.metaSemanal !== null && (
+            <span className="tabular-nums">
+              {' · '}
+              <span className={item.feitasNaSemana! >= item.metaSemanal ? 'text-accent-strong' : 'text-ink-muted'}>
+                {item.feitasNaSemana} de {item.metaSemanal}
+              </span>{' '}
+              na semana
+            </span>
+          )}
+        </p>
       </div>
       {item.streakAtual > 0 && (
         <span
           className="flex shrink-0 items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium tabular-nums text-warning"
-          title={`${item.streakAtual} ${item.streakAtual === 1 ? 'vez seguida' : 'vezes seguidas'} no dia agendado`}
+          title={`${item.streakAtual} ${item.streakAtual === 1 ? 'vez seguida' : 'vezes seguidas'} ${
+            item.metaSemanal === null ? 'no dia agendado' : 'sem perder a meta da semana'
+          }`}
         >
           <IconFlame className="h-3.5 w-3.5" />
           {item.streakAtual}
@@ -166,7 +179,15 @@ export function Hoje() {
       queryClient.setQueryData<DiaHoje>(['hoje', data], (atual) =>
         atual && {
           ...atual,
-          itens: atual.itens.map((i) => (i.atividadeId === item.atividadeId ? { ...i, concluido: !i.concluido } : i)),
+          itens: atual.itens.map((i) =>
+            i.atividadeId === item.atividadeId
+              ? {
+                  ...i,
+                  concluido: !i.concluido,
+                  feitasNaSemana: i.feitasNaSemana === null ? null : i.feitasNaSemana + (i.concluido ? -1 : 1),
+                }
+              : i,
+          ),
         },
       )
       return { anterior }

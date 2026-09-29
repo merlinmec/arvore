@@ -32,6 +32,6 @@ public class AtividadeService {
 
     private AtividadeDTO paraDTO(Atividade atividade) {
         return new AtividadeDTO(
-                atividade.getId(), atividade.getObjetivoId(), atividade.getNome(), List.of());
+                atividade.getId(), atividade.getObjetivoId(), atividade.getNome(), List.of(), null);
     }
 }
