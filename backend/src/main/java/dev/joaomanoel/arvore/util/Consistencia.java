@@ -4,6 +4,7 @@ import dev.joaomanoel.arvore.dto.ProgressoDTO;
 import dev.joaomanoel.arvore.entity.DiaSemana;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -11,19 +12,39 @@ import java.util.UUID;
 /**
  * Regras puras de consistência (planejado x concluído, sequências), sem tocar banco.
  *
- * <p>"Planejado" é reconstruído a partir da grade semanal atual: a grade não é versionada, então
- * mudar os dias de uma atividade muda também o planejado dos dias passados. Dias anteriores à
- * criação da atividade nunca contam como planejados.
+ * <p>"Planejado" é reconstruído a partir do histórico da grade semanal: cada dia da semana vale
+ * dentro da sua vigência, então mudar a grade hoje não altera o planejado dos dias passados. Dias
+ * anteriores à criação da atividade nunca contam como planejados.
  */
 public final class Consistencia {
 
     private Consistencia() {}
 
-    /** Uma atividade vista como rotina: desde quando existe e em quais dias da semana ela cai. */
-    public record Rotina(UUID atividadeId, LocalDate inicio, Set<DiaSemana> dias) {
+    /** Um dia da semana na grade, valendo de {@code de} até o dia anterior a {@code ate} (null = em vigor). */
+    public record Vigencia(DiaSemana dia, LocalDate de, LocalDate ate) {
+
+        public boolean cobre(LocalDate data) {
+            return dia == Datas.diaSemanaDe(data)
+                    && !data.isBefore(de)
+                    && (ate == null || data.isBefore(ate));
+        }
+    }
+
+    /** Uma atividade vista como rotina: desde quando existe e o histórico da sua grade semanal. */
+    public record Rotina(UUID atividadeId, LocalDate inicio, List<Vigencia> grade) {
 
         public boolean planejadaEm(LocalDate data) {
-            return !data.isBefore(inicio) && dias.contains(Datas.diaSemanaDe(data));
+            return !data.isBefore(inicio) && grade.stream().anyMatch(vigencia -> vigencia.cobre(data));
+        }
+
+        /** Dias da grade em vigor, de segunda a domingo. */
+        public List<DiaSemana> diasAtuais() {
+            return grade.stream()
+                    .filter(vigencia -> vigencia.ate() == null)
+                    .map(Vigencia::dia)
+                    .distinct()
+                    .sorted()
+                    .toList();
         }
     }
 
