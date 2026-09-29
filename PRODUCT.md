@@ -28,7 +28,7 @@ Apps de hábito (Habi, Streaks) tratam hábitos como lista plana; apps de metas 
 
 - Backend Spring Boot 4 / Java 17+ / PostgreSQL / Flyway / JWT com 1 usuário configurado; frontend React 19 + Vite + Tailwind v4 + React Query.
 - Single-user por decisão (confirmada em 2026-09-28). Multiusuário fica como fase futura do roadmap.
-- A grade semanal (`agenda_semanal`) não é versionada: o "planejado" de dias passados é reconstruído a partir da grade atual.
+- A grade semanal (`agenda_semanal`) tem vigência (`vigente_de`/`vigente_ate`): mudanças valem a partir de hoje e o "planejado" de dias passados não muda.
 - Descartados: gamificação (mascote, pontos), camada social.
 
 ## Brand Commitments
