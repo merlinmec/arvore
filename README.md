@@ -2,6 +2,16 @@
 
 App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Spring Boot (Java) e frontend em React (Vite).
 
+## Funcionalidades
+
+- **Áreas em árvore** (ex.: Saúde → Corrida), cada uma com cor, descrição e wallpaper
+- **Objetivos** com prazo e status, e **atividades** encaixadas numa grade semanal
+- **Hoje**: plano do dia agrupado por área, navegação por data com a tira da semana, registro retroativo e sequência (streak) por atividade
+- **Painel**: taxa de conclusão com variação contra o período anterior, série diária por área, consistência por área e por dia da semana, heatmap anual e ranking de atividades, com filtro de período e de área
+- **Notas** em Markdown com tags que cruzam áreas
+
+Direção do produto, diretrizes e próximas fases: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ## Estrutura
 
 ```
@@ -64,6 +74,16 @@ A API sobe em `http://localhost:8080`.
 ```bash
 ./mvnw test
 ```
+
+### Principais endpoints
+
+| Método | Rota | O que faz |
+|---|---|---|
+| `GET` | `/api/hoje?data=AAAA-MM-DD` | Plano do dia (padrão: hoje), com `editavel=false` para datas futuras |
+| `POST`/`DELETE` | `/api/atividades/{id}/conclusao?data=` | Marca/desmarca a conclusão (aceita dias passados, recusa futuros) |
+| `GET` | `/api/insights/resumo?dias=30&areaId=` | Consistência do período (1–365 dias), opcionalmente filtrada por área e subáreas |
+| `GET` | `/api/insights/historico?inicio=&fim=&areaId=` | Planejado x concluído por dia (padrão: últimas 53 semanas) |
+| `GET` | `/api/areas` | Árvore de áreas com o progresso da semana |
 
 ## Frontend (`frontend/`)
 
