@@ -1,16 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { BarraProgresso } from '../components/BarraProgresso'
 import { EditarAreaForm } from '../components/EditarAreaForm'
-import { IconChevronLeft, IconPencil, IconTrash } from '../components/icons'
+import { Heatmap } from '../components/graficos/Heatmap'
+import { IconChevronRight, IconPencil, IconTrash } from '../components/icons'
 import { NotaCard } from '../components/NotaCard'
 import { NovaNotaForm } from '../components/NovaNotaForm'
 import { NovoObjetivoForm } from '../components/NovoObjetivoForm'
 import { ObjetivoCard } from '../components/ObjetivoCard'
 import { api } from '../lib/api'
-import { encontrarArea } from '../lib/arvore'
-import type { AreaArvore, Nota, ObjetivoComAtividades } from '../lib/types'
+import { caminhoAte } from '../lib/arvore'
+import { corDaArea } from '../lib/cores'
+import { hojeIso, inicioDaSemana, somarDias } from '../lib/datas'
+import { useAreas, useHistorico } from '../lib/queries'
+import type { Nota, ObjetivoComAtividades } from '../lib/types'
+
+const SEMANAS_HISTORICO = 26
 
 export function AreaDetalhe() {
   const { id } = useParams<{ id: string }>()
@@ -18,12 +23,16 @@ export function AreaDetalhe() {
   const queryClient = useQueryClient()
   const [editando, setEditando] = useState(false)
 
-  const { data: areas } = useQuery({
-    queryKey: ['areas'],
-    queryFn: async () => (await api.get<AreaArvore[]>('/areas')).data,
-  })
+  const { data: areas, isLoading: carregandoAreas } = useAreas()
+  const caminho = id ? caminhoAte(areas ?? [], id) : []
+  const area = caminho[caminho.length - 1] ?? null
 
-  const area = id ? encontrarArea(areas ?? [], id) : null
+  const hoje = hojeIso()
+  const { data: historico } = useHistorico({
+    inicio: somarDias(inicioDaSemana(hoje), -7 * (SEMANAS_HISTORICO - 1)),
+    fim: hoje,
+    areaId: id,
+  })
 
   const excluirArea = useMutation({
     mutationFn: () => api.delete(`/areas/${id}`),
@@ -45,134 +54,192 @@ export function AreaDetalhe() {
     enabled: Boolean(id),
   })
 
-  if (!area) {
-    return <p className="text-ink-muted">Área não encontrada.</p>
+  if (carregandoAreas) {
+    return <div className="h-48 animate-pulse rounded-xl bg-surface" />
   }
+
+  if (!area) {
+    return (
+      <div className="space-y-3">
+        <p className="text-ink-muted">Área não encontrada. Ela pode ter sido excluída.</p>
+        <Link to="/areas" className="text-sm text-accent-strong hover:underline">
+          Voltar para Áreas
+        </Link>
+      </div>
+    )
+  }
+
+  const cor = corDaArea(area.corTema)
+  const ativos = (objetivos ?? []).filter((objetivo) => objetivo.status === 'ATIVO')
+  const outros = (objetivos ?? []).filter((objetivo) => objetivo.status !== 'ATIVO')
 
   return (
     <div className="space-y-8">
-      <Link
-        to="/areas"
-        className="inline-flex items-center gap-1 text-sm text-ink-faint transition-colors hover:text-ink-muted"
-      >
-        <IconChevronLeft className="h-4 w-4" />
-        Áreas
-      </Link>
+      <nav aria-label="Caminho" className="flex flex-wrap items-center gap-1 text-sm text-ink-faint">
+        <Link to="/areas" className="transition-colors hover:text-ink-muted">
+          Áreas
+        </Link>
+        {caminho.map((parte) => (
+          <span key={parte.id} className="flex items-center gap-1">
+            <IconChevronRight className="h-3.5 w-3.5" />
+            {parte.id === area.id ? (
+              <span className="text-ink-muted">{parte.nome}</span>
+            ) : (
+              <Link to={`/areas/${parte.id}`} className="transition-colors hover:text-ink-muted">
+                {parte.nome}
+              </Link>
+            )}
+          </span>
+        ))}
+      </nav>
 
       {editando ? (
         <EditarAreaForm area={area} aoCancelar={() => setEditando(false)} />
       ) : (
-        <div
-          className="relative overflow-hidden rounded-xl border border-line"
-          style={
-            area.wallpaperUrl
-              ? {
-                  backgroundImage: `url(${area.wallpaperUrl})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }
-              : undefined
-          }
-        >
+        <section className="overflow-hidden rounded-xl border border-line bg-surface">
           <div
-            className={
+            className="relative h-28 sm:h-36"
+            style={
               area.wallpaperUrl
-                ? 'bg-gradient-to-t from-canvas via-canvas/85 to-canvas/40 backdrop-blur-[1px]'
-                : 'bg-surface'
+                ? { backgroundImage: `url(${area.wallpaperUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : {
+                    background: `linear-gradient(120deg, color-mix(in oklab, ${cor} 60%, var(--color-surface)) 0%, color-mix(in oklab, ${cor} 22%, var(--color-surface)) 55%, var(--color-surface) 100%)`,
+                  }
             }
           >
-            <div className="flex items-start justify-between gap-4 p-6">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5">
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: area.corTema ?? 'var(--color-ink-faint)' }}
-                  />
-                  <h1 className="truncate text-2xl font-semibold text-ink">{area.nome}</h1>
-                </div>
-                {area.descricaoGeral && (
-                  <p className="mt-2 max-w-lg text-sm text-ink-muted">{area.descricaoGeral}</p>
-                )}
-                <div className="mt-4 max-w-xs">
-                  <BarraProgresso progresso={area.progresso} corTema={area.corTema} />
-                </div>
-              </div>
-              <div className="flex shrink-0 gap-1">
-                <button
-                  type="button"
-                  onClick={() => setEditando(true)}
-                  aria-label="Editar área"
-                  title="Editar área"
-                  className="rounded-full p-2 text-ink-faint transition-colors hover:bg-surface-2 hover:text-ink-muted"
-                >
-                  <IconPencil className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        `Excluir a área "${area.nome}" e tudo dentro dela (subáreas, objetivos, notas)?`,
-                      )
-                    ) {
-                      excluirArea.mutate()
-                    }
-                  }}
-                  aria-label="Excluir área"
-                  title="Excluir área"
-                  className="rounded-full p-2 text-ink-faint transition-colors hover:bg-danger-soft hover:text-danger"
-                >
-                  <IconTrash className="h-4 w-4" />
-                </button>
-              </div>
+            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface to-transparent" />
+            <div className="absolute right-3 top-3 flex gap-1">
+              <button
+                type="button"
+                onClick={() => setEditando(true)}
+                aria-label="Editar área"
+                title="Editar área"
+                className="rounded-md bg-canvas/60 p-2 text-ink-muted backdrop-blur-sm transition-colors hover:bg-canvas/80 hover:text-ink"
+              >
+                <IconPencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm(`Excluir a área "${area.nome}" e tudo dentro dela (subáreas, objetivos, notas)?`)) {
+                    excluirArea.mutate()
+                  }
+                }}
+                aria-label="Excluir área"
+                title="Excluir área"
+                className="rounded-md bg-canvas/60 p-2 text-ink-muted backdrop-blur-sm transition-colors hover:bg-danger-soft hover:text-danger"
+              >
+                <IconTrash className="h-4 w-4" />
+              </button>
             </div>
           </div>
-        </div>
+
+          <div className="grid gap-6 px-6 pb-6 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div className="min-w-0">
+              <h1 className="text-3xl font-semibold tracking-tight text-ink">{area.nome}</h1>
+              {area.descricaoGeral && <p className="mt-2 max-w-xl text-sm text-ink-muted">{area.descricaoGeral}</p>}
+            </div>
+            <dl className="flex gap-8">
+              <div>
+                <dt className="text-xs text-ink-faint">Semana</dt>
+                <dd className="mt-0.5 text-2xl font-semibold tabular-nums text-ink">
+                  {area.progresso.percentual === null ? '—' : `${area.progresso.percentual}%`}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-ink-faint">Objetivos ativos</dt>
+                <dd className="mt-0.5 text-2xl font-semibold tabular-nums text-ink">{ativos.length}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-ink-faint">Subáreas</dt>
+                <dd className="mt-0.5 text-2xl font-semibold tabular-nums text-ink">{area.filhos.length}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="border-t border-line px-6 py-5">
+            <div className="mb-4 flex items-baseline justify-between gap-3">
+              <h2 className="text-sm font-medium text-ink">Últimos 6 meses</h2>
+              <Link to={`/painel?area=${area.id}`} className="text-xs text-ink-faint transition-colors hover:text-ink-muted">
+                Ver no painel →
+              </Link>
+            </div>
+            {historico ? <Heatmap dias={historico} hoje={hoje} /> : <div className="h-28 animate-pulse rounded-md bg-surface-2" />}
+          </div>
+        </section>
       )}
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-medium text-ink">Objetivos</h2>
-          {(objetivos ?? []).length > 0 && (
-            <span className="tabular-nums text-sm text-ink-faint">{objetivos?.length}</span>
+      {area.filhos.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-medium text-ink">Subáreas</h2>
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {area.filhos.map((filho) => (
+              <li key={filho.id}>
+                <Link
+                  to={`/areas/${filho.id}`}
+                  className="flex items-center gap-2.5 rounded-lg border border-line bg-surface px-3.5 py-2.5 transition-colors hover:border-line-strong"
+                >
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: corDaArea(filho.corTema) }} />
+                  <span className="min-w-0 flex-1 truncate text-sm text-ink">{filho.nome}</span>
+                  <span className="text-sm tabular-nums text-ink-muted">
+                    {filho.progresso.percentual === null ? '—' : `${filho.progresso.percentual}%`}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
+        <section className="min-w-0 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="flex items-baseline gap-2 text-lg font-medium text-ink">
+              Objetivos
+              {(objetivos ?? []).length > 0 && (
+                <span className="text-sm tabular-nums text-ink-faint">{objetivos?.length}</span>
+              )}
+            </h2>
+            <NovoObjetivoForm areaId={area.id} />
+          </div>
+
+          {carregandoObjetivos && <div className="h-40 animate-pulse rounded-xl bg-surface" />}
+          {!carregandoObjetivos && (objetivos ?? []).length === 0 && (
+            <p className="rounded-xl border border-dashed border-line px-5 py-8 text-center text-sm text-ink-faint">
+              Objetivos são o que você quer alcançar nesta área. Cada um ganha atividades com dias fixos na semana.
+            </p>
           )}
-        </div>
 
-        <NovoObjetivoForm areaId={area.id} />
+          <div className="space-y-3">
+            {[...ativos, ...outros].map((objetivo) => (
+              <ObjetivoCard key={objetivo.id} objetivo={objetivo} corArea={area.corTema} />
+            ))}
+          </div>
+        </section>
 
-        {carregandoObjetivos && <p className="text-sm text-ink-faint">Carregando objetivos...</p>}
-        {!carregandoObjetivos && (objetivos ?? []).length === 0 && (
-          <p className="text-sm text-ink-faint">Nenhum objetivo criado ainda.</p>
-        )}
+        <section className="min-w-0 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="flex items-baseline gap-2 text-lg font-medium text-ink">
+              Notas
+              {(notas ?? []).length > 0 && <span className="text-sm tabular-nums text-ink-faint">{notas?.length}</span>}
+            </h2>
+            <NovaNotaForm areaId={area.id} />
+          </div>
 
-        <div className="space-y-3">
-          {(objetivos ?? []).map((objetivo) => (
-            <ObjetivoCard key={objetivo.id} objetivo={objetivo} />
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-medium text-ink">Notas</h2>
-          {(notas ?? []).length > 0 && (
-            <span className="tabular-nums text-sm text-ink-faint">{notas?.length}</span>
+          {carregandoNotas && <div className="h-24 animate-pulse rounded-xl bg-surface" />}
+          {!carregandoNotas && (notas ?? []).length === 0 && (
+            <p className="rounded-xl border border-dashed border-line px-5 py-8 text-center text-sm text-ink-faint">
+              Anotações em Markdown, com tags que cruzam áreas.
+            </p>
           )}
-        </div>
 
-        <NovaNotaForm areaId={area.id} />
-
-        {carregandoNotas && <p className="text-sm text-ink-faint">Carregando notas...</p>}
-        {!carregandoNotas && (notas ?? []).length === 0 && (
-          <p className="text-sm text-ink-faint">Nenhuma nota criada ainda.</p>
-        )}
-
-        <div className="space-y-3">
-          {(notas ?? []).map((nota) => (
-            <NotaCard key={nota.id} nota={nota} />
-          ))}
-        </div>
-      </section>
+          <div className="space-y-3">
+            {(notas ?? []).map((nota) => (
+              <NotaCard key={nota.id} nota={nota} />
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
