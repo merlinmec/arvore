@@ -101,7 +101,11 @@ Inspiração: Sunsama, Clockify, Habi.
 
 | Onde | Problema | Correção sugerida |
 |---|---|---|
-| `AreaService.calcularProgressoDaArea` / `ProgressoService` | Uma query por objetivo e por atividade (N+1) ao listar a árvore | Reaproveitar o `Catalogo` e uma única query de conclusões da semana |
-| Progresso semanal da área | Conta atividades de objetivos pausados/arquivados, diferente de Hoje e Insights | Usar `Catalogo.atividadesEmCurso` também aqui |
-| `NotaService.buscarPorTag` | Carrega todas as notas e filtra em memória | Query com join em `nota_tag` |
 | `agenda_semanal` | Sem histórico de versões (ver Fase 2) | `vigente_de`/`vigente_ate` |
+| Tabela `tag` | Tag que ficou sem nenhuma nota continua no banco e aparece em `GET /api/tags` | Apagar tags órfãs ao editar/excluir nota, ou listar só as que têm nota |
+
+### Resolvida (29/09/2026)
+
+- **N+1 em Áreas e Objetivos:** a árvore de áreas e a lista de objetivos agora usam o `Catalogo` e uma query de conclusões da semana (`ProgressoService.semanaAtual`). Antes eram várias queries por objetivo e por atividade.
+- **Progresso semanal alinhado com Hoje e Painel:** passa por `Consistencia.progresso`. Na área, só contam objetivos ativos; nenhum dia antes da criação da atividade conta como planejado; conclusão em dia fora da grade não conta.
+- **Busca de notas por tag:** feita no banco (subquery em `nota_tag`, tags carregadas junto, mais recentes primeiro), e os nomes das áreas vêm numa query só.
