@@ -6,6 +6,7 @@ import dev.joaomanoel.arvore.dto.NotaDTO;
 import dev.joaomanoel.arvore.entity.Area;
 import dev.joaomanoel.arvore.entity.Nota;
 import dev.joaomanoel.arvore.entity.Tag;
+import dev.joaomanoel.arvore.exception.NaoEncontradoException;
 import dev.joaomanoel.arvore.repository.AreaRepository;
 import dev.joaomanoel.arvore.repository.NotaRepository;
 import dev.joaomanoel.arvore.repository.TagRepository;
@@ -43,7 +44,7 @@ public class NotaService {
         Nota nota =
                 notaRepository
                         .findById(id)
-                        .orElseThrow(() -> new IllegalArgumentException("Nota não encontrada"));
+                        .orElseThrow(() -> new NaoEncontradoException("Nota não encontrada"));
         nota.setTitulo(requisicao.titulo());
         nota.setCorpo(requisicao.corpo() != null ? requisicao.corpo() : "");
         nota.setTags(resolverTags(requisicao.tags()));
