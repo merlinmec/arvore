@@ -29,7 +29,7 @@ public class CatalogoService {
     @Transactional(readOnly = true)
     public Catalogo carregar() {
         return new Catalogo(
-                areaRepository.findAll(),
+                areaRepository.findAllByOrderByOrdemAsc(),
                 objetivoRepository.findAll(),
                 atividadeRepository.findAll(),
                 agendaSemanalRepository.findAll());

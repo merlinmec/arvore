@@ -2,10 +2,13 @@ package dev.joaomanoel.arvore.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.joaomanoel.arvore.dto.ProgressoDTO;
 import dev.joaomanoel.arvore.entity.DiaSemana;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
 import java.time.LocalDate;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -73,6 +76,38 @@ class ConsistenciaTest {
                         SEXTA);
 
         assertThat(Consistencia.maiorSequencia(segQuaSex, feitas, semanaPassada, SEXTA)).isEqualTo(4);
+    }
+
+    @Test
+    void progressoSomaAsRotinasEIgnoraConclusaoForaDoPlano() {
+        Rotina diaria = rotina(SEGUNDA.minusWeeks(1), DiaSemana.values());
+        Map<UUID, Set<LocalDate>> concluidas =
+                Map.of(
+                        segQuaSex.atividadeId(), Set.of(SEGUNDA, SEGUNDA.plusDays(1)), // terça não conta
+                        diaria.atividadeId(), Set.of(SEGUNDA, QUARTA, SEXTA));
+
+        ProgressoDTO progresso =
+                Consistencia.progresso(List.of(segQuaSex, diaria), concluidas, SEGUNDA, SEGUNDA.plusDays(6));
+
+        assertThat(progresso.planejado()).isEqualTo(3 + 7);
+        assertThat(progresso.concluido()).isEqualTo(1 + 3);
+        assertThat(progresso.percentual()).isEqualTo(40);
+    }
+
+    @Test
+    void progressoNaoPlanejaDiasAntesDaCriacao() {
+        Rotina nova = rotina(QUARTA, DiaSemana.SEGUNDA, DiaSemana.QUARTA, DiaSemana.SEXTA);
+
+        ProgressoDTO progresso =
+                Consistencia.progresso(List.of(nova), Map.of(), SEGUNDA, SEGUNDA.plusDays(6));
+
+        assertThat(progresso.planejado()).isEqualTo(2);
+        assertThat(progresso.percentual()).isZero();
+    }
+
+    @Test
+    void progressoSemRotinasNaoTemPercentual() {
+        assertThat(Consistencia.progresso(List.of(), Map.of(), SEGUNDA, SEXTA).percentual()).isNull();
     }
 
     @Test
