@@ -108,3 +108,78 @@ export function IconInbox(props: IconProps) {
     </svg>
   )
 }
+
+export function IconChevronRight(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M9 5l7 7-7 7" />
+    </svg>
+  )
+}
+
+export function IconSun(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="3.5" />
+      <path d="M12 3v1.5M12 19.5V21M3 12h1.5M19.5 12H21M5.6 5.6l1.1 1.1M17.3 17.3l1.1 1.1M5.6 18.4l1.1-1.1M17.3 6.7l1.1-1.1" />
+    </svg>
+  )
+}
+
+export function IconChart(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 20h16" />
+      <path d="M7 16v-5M12 16V6M17 16v-8" />
+    </svg>
+  )
+}
+
+export function IconBranches(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="6" cy="5" r="2" />
+      <circle cx="6" cy="19" r="2" />
+      <circle cx="18" cy="7" r="2" />
+      <path d="M6 7v10" />
+      <path d="M18 9c0 4.5-3.5 6.5-11 7.5" />
+    </svg>
+  )
+}
+
+export function IconCalendar(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="4" y="5" width="16" height="15" rx="2" />
+      <path d="M4 10h16M9 3v4M15 3v4" />
+    </svg>
+  )
+}
+
+export function IconTrendUp(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 16l6-6 4 4 6-6" />
+      <path d="M15 8h5v5" />
+    </svg>
+  )
+}
+
+export function IconTrendDown(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 8l6 6 4-4 6 6" />
+      <path d="M15 16h5v-5" />
+    </svg>
+  )
+}
+
+export function IconTarget(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="0.5" />
+    </svg>
+  )
+}

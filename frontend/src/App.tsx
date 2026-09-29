@@ -8,6 +8,7 @@ import { Areas } from './pages/Areas'
 import { Hoje } from './pages/Hoje'
 import { Login } from './pages/Login'
 import { NovaArea } from './pages/NovaArea'
+import { Painel } from './pages/Painel'
 import { TagDetalhe } from './pages/TagDetalhe'
 
 const queryClient = new QueryClient()
@@ -22,6 +23,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route index element={<Hoje />} />
+                <Route path="painel" element={<Painel />} />
                 <Route path="areas" element={<Areas />} />
                 <Route path="areas/nova" element={<NovaArea />} />
                 <Route path="areas/:id" element={<AreaDetalhe />} />
