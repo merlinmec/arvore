@@ -54,19 +54,21 @@ public class InsightsService {
         }
         Catalogo catalogo = carregar(areaId);
         List<Atividade> atividades = catalogo.atividadesEmCurso(areaId);
-        Map<UUID, Set<LocalDate>> concluidas = concluidasPorAtividade(atividades, inicio, fim);
+        Map<UUID, Set<LocalDate>> concluidas =
+                concluidasPorAtividade(atividades, Datas.inicioDaSemana(inicio), fim);
 
         List<DiaConsistenciaDTO> dias = new ArrayList<>();
         for (LocalDate data = inicio; !data.isAfter(fim); data = data.plusDays(1)) {
             int planejado = 0;
             int concluido = 0;
             for (Atividade atividade : atividades) {
-                if (catalogo.rotina(atividade.getId()).planejadaEm(data)) {
-                    planejado++;
-                    if (concluidas.getOrDefault(atividade.getId(), Set.of()).contains(data)) {
-                        concluido++;
-                    }
-                }
+                Consistencia.Dia dia =
+                        Consistencia.dia(
+                                catalogo.rotina(atividade.getId()),
+                                concluidas.getOrDefault(atividade.getId(), Set.of()),
+                                data);
+                planejado += dia.planejado();
+                concluido += dia.concluido();
             }
             dias.add(new DiaConsistenciaDTO(data, planejado, concluido));
         }
@@ -84,7 +86,9 @@ public class InsightsService {
 
         Catalogo catalogo = carregar(areaId);
         List<Atividade> atividades = catalogo.atividadesEmCurso(areaId);
-        LocalDate inicioBusca = inicioAnterior.isBefore(limiteStreak) ? inicioAnterior : limiteStreak;
+        // Começa numa segunda: a meta semanal olha a semana inteira de cada dia.
+        LocalDate inicioBusca =
+                Datas.inicioDaSemana(inicioAnterior.isBefore(limiteStreak) ? inicioAnterior : limiteStreak);
         Map<UUID, Set<LocalDate>> concluidas = concluidasPorAtividade(atividades, inicioBusca, hoje);
 
         Acumulador periodo = new Acumulador();
@@ -109,30 +113,25 @@ public class InsightsService {
             int planejadoAtividade = 0;
             int concluidoAtividade = 0;
             for (LocalDate data = inicio; !data.isAfter(hoje); data = data.plusDays(1)) {
-                if (!rotina.planejadaEm(data)) {
+                Consistencia.Dia dia = Consistencia.dia(rotina, feitas, data);
+                if (dia.planejado() == 0) {
                     continue;
                 }
-                boolean feita = feitas.contains(data);
                 int[] celula = porDataERamo.get(data).computeIfAbsent(ramo, chave -> new int[2]);
                 int[] diaSemana = porDiaSemana.get(Datas.diaSemanaDe(data));
                 int[] doRamo = porRamo.computeIfAbsent(ramo, chave -> new int[2]);
-                celula[0]++;
-                diaSemana[0]++;
-                doRamo[0]++;
-                planejadoAtividade++;
-                if (feita) {
-                    celula[1]++;
-                    diaSemana[1]++;
-                    doRamo[1]++;
-                    concluidoAtividade++;
+                for (int[] contagem : List.of(celula, diaSemana, doRamo)) {
+                    contagem[0] += dia.planejado();
+                    contagem[1] += dia.concluido();
                 }
+                planejadoAtividade += dia.planejado();
+                concluidoAtividade += dia.concluido();
             }
             periodo.somar(planejadoAtividade, concluidoAtividade);
 
             for (LocalDate data = inicioAnterior; data.isBefore(inicio); data = data.plusDays(1)) {
-                if (rotina.planejadaEm(data)) {
-                    anterior.somar(1, feitas.contains(data) ? 1 : 0);
-                }
+                Consistencia.Dia dia = Consistencia.dia(rotina, feitas, data);
+                anterior.somar(dia.planejado(), dia.concluido());
             }
 
             porAtividade.add(

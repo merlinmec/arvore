@@ -8,6 +8,7 @@ import dev.joaomanoel.arvore.entity.Conclusao;
 import dev.joaomanoel.arvore.entity.Objetivo;
 import dev.joaomanoel.arvore.repository.ConclusaoRepository;
 import dev.joaomanoel.arvore.util.Consistencia;
+import dev.joaomanoel.arvore.util.Consistencia.Rotina;
 import dev.joaomanoel.arvore.util.Datas;
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -31,17 +32,21 @@ public class HojeService {
         this.conclusaoRepository = conclusaoRepository;
     }
 
-    /** Plano do dia: atividades de objetivos ativos agendadas pro dia da semana de {@code data}. */
+    /**
+     * Plano do dia: atividades de objetivos ativos agendadas pro dia da semana de {@code data}, mais
+     * as de meta semanal que ainda não bateram a meta (ou que foram feitas nesse dia).
+     */
     public DiaHojeDTO listar(LocalDate data) {
         LocalDate hoje = Datas.hoje();
         Catalogo catalogo = catalogoService.carregar();
 
         List<Atividade> doDia =
                 catalogo.atividadesEmCurso(null).stream()
-                        .filter(atividade -> catalogo.rotina(atividade.getId()).planejadaEm(data))
+                        .filter(atividade -> podeEntrarNoDia(catalogo.rotina(atividade.getId()), data))
                         .toList();
 
-        LocalDate inicioJanela = data.minusDays(JANELA_STREAK_DIAS);
+        // Começa numa segunda: a meta semanal olha a semana inteira de cada dia.
+        LocalDate inicioJanela = Datas.inicioDaSemana(data.minusDays(JANELA_STREAK_DIAS));
         List<UUID> ids = doDia.stream().map(Atividade::getId).toList();
         Map<UUID, Set<LocalDate>> concluidasPorAtividade =
                 ids.isEmpty()
@@ -54,6 +59,12 @@ public class HojeService {
 
         List<ItemHojeDTO> itens =
                 doDia.stream()
+                        .filter(
+                                atividade ->
+                                        aindaFaltaNaSemana(
+                                                catalogo.rotina(atividade.getId()),
+                                                concluidasPorAtividade.getOrDefault(atividade.getId(), Set.of()),
+                                                data))
                         .map(
                                 atividade -> {
                                     Set<LocalDate> concluidas =
@@ -77,6 +88,8 @@ public class HojeService {
             LocalDate inicioJanela) {
         Objetivo objetivo = catalogo.objetivoDe(atividade);
         Area area = catalogo.areaDe(atividade);
+        Rotina rotina = catalogo.rotina(atividade.getId());
+        Consistencia.Semana semana = Consistencia.semana(rotina, concluidas, data);
 
         return new ItemHojeDTO(
                 atividade.getId(),
@@ -87,7 +100,18 @@ public class HojeService {
                 area.getNome(),
                 area.getCorTema(),
                 concluidas.contains(data),
-                Consistencia.sequenciaAtual(
-                        catalogo.rotina(atividade.getId()), concluidas, data, inicioJanela));
+                Consistencia.sequenciaAtual(rotina, concluidas, data, inicioJanela),
+                semana == null ? null : semana.meta(),
+                semana == null ? null : semana.feitas());
+    }
+
+    private static boolean podeEntrarNoDia(Rotina rotina, LocalDate data) {
+        return rotina.planejadaEm(data) || rotina.cotaEm(data) != null;
+    }
+
+    /** Meta semanal já batida em outros dias some da lista; feita nesse dia continua, pra poder desmarcar. */
+    private static boolean aindaFaltaNaSemana(Rotina rotina, Set<LocalDate> concluidas, LocalDate data) {
+        Consistencia.Semana semana = Consistencia.semana(rotina, concluidas, data);
+        return semana == null || concluidas.contains(data) || semana.feitas() < semana.meta();
     }
 }

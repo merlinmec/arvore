@@ -83,6 +83,8 @@ A API sobe em `http://localhost:8080`.
 | `POST`/`DELETE` | `/api/atividades/{id}/conclusao?data=` | Marca/desmarca a conclusão (aceita dias passados, recusa futuros) |
 | `GET` | `/api/insights/resumo?dias=30&areaId=` | Consistência do período (1–365 dias), opcionalmente filtrada por área e subáreas |
 | `GET` | `/api/insights/historico?inicio=&fim=&areaId=` | Planejado x concluído por dia (padrão: últimas 53 semanas) |
+| `POST`/`DELETE` | `/api/atividades/{id}/agenda/{DIA}` | Coloca/tira um dia fixo da grade (vale a partir de hoje) |
+| `PUT`/`DELETE` | `/api/atividades/{id}/agenda/frequencia` | Define (`{"vezes": 1-7}`) ou remove a meta de N vezes por semana; troca de modo encerra os dias fixos |
 | `GET` | `/api/areas` | Árvore de áreas com o progresso da semana |
 
 ## Frontend (`frontend/`)
