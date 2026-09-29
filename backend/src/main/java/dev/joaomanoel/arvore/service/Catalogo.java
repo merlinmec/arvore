@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,8 +23,9 @@ import java.util.stream.Collectors;
 
 /**
  * Retrato em memória da árvore inteira (áreas, objetivos, atividades e grade semanal), carregado
- * em quatro queries por {@link CatalogoService}. Existe pra Hoje e Insights não fazerem uma query
- * por atividade: o app é single-user, então o volume cabe folgado em memória.
+ * em quatro queries por {@link CatalogoService}. Existe pra nenhuma tela fazer uma query por
+ * atividade: o app é single-user, então o volume cabe folgado em memória. Listas preservam a ordem
+ * de carga (áreas por {@code ordem}).
  */
 public class Catalogo {
 
@@ -32,6 +34,8 @@ public class Catalogo {
     private final Map<UUID, Atividade> atividades;
     private final Map<UUID, Rotina> rotinas;
     private final Map<UUID, List<Area>> filhosPorPai;
+    private final Map<UUID, List<Objetivo>> objetivosPorArea;
+    private final Map<UUID, List<Atividade>> atividadesPorObjetivo;
 
     Catalogo(
             Collection<Area> areas,
@@ -45,6 +49,9 @@ public class Catalogo {
                 areas.stream()
                         .filter(area -> area.getAreaPaiId() != null)
                         .collect(Collectors.groupingBy(Area::getAreaPaiId));
+        this.objetivosPorArea = objetivos.stream().collect(Collectors.groupingBy(Objetivo::getAreaId));
+        this.atividadesPorObjetivo =
+                atividades.stream().collect(Collectors.groupingBy(Atividade::getObjetivoId));
 
         Map<UUID, Set<DiaSemana>> diasPorAtividade =
                 agendas.stream()
@@ -69,7 +76,32 @@ public class Catalogo {
     }
 
     private static <T> Map<UUID, T> indexar(Collection<T> itens, Function<T, UUID> id) {
-        return itens.stream().collect(Collectors.toMap(id, Function.identity()));
+        return itens.stream()
+                .collect(
+                        Collectors.toMap(
+                                id, Function.identity(), (primeiro, segundo) -> primeiro, LinkedHashMap::new));
+    }
+
+    /** Áreas sem pai, na ordem em que foram carregadas. */
+    public List<Area> raizes() {
+        return areas.values().stream().filter(area -> area.getAreaPaiId() == null).toList();
+    }
+
+    public List<Area> filhosDe(UUID areaId) {
+        return filhosPorPai.getOrDefault(areaId, List.of());
+    }
+
+    /** Objetivos diretos da área, sem os de subáreas. */
+    public List<Objetivo> objetivosDe(UUID areaId) {
+        return objetivosPorArea.getOrDefault(areaId, List.of());
+    }
+
+    public List<Atividade> atividadesDe(UUID objetivoId) {
+        return atividadesPorObjetivo.getOrDefault(objetivoId, List.of());
+    }
+
+    public List<Rotina> rotinasDe(Objetivo objetivo) {
+        return atividadesDe(objetivo.getId()).stream().map(atividade -> rotina(atividade.getId())).toList();
     }
 
     public Area area(UUID id) {

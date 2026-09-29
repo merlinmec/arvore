@@ -5,14 +5,11 @@ import dev.joaomanoel.arvore.dto.CriarObjetivoRequest;
 import dev.joaomanoel.arvore.dto.EditarObjetivoRequest;
 import dev.joaomanoel.arvore.dto.ObjetivoComAtividadesDTO;
 import dev.joaomanoel.arvore.dto.ObjetivoDTO;
-import dev.joaomanoel.arvore.entity.AgendaSemanal;
 import dev.joaomanoel.arvore.entity.Atividade;
-import dev.joaomanoel.arvore.entity.DiaSemana;
 import dev.joaomanoel.arvore.entity.Objetivo;
 import dev.joaomanoel.arvore.exception.NaoEncontradoException;
-import dev.joaomanoel.arvore.repository.AgendaSemanalRepository;
-import dev.joaomanoel.arvore.repository.AtividadeRepository;
 import dev.joaomanoel.arvore.repository.ObjetivoRepository;
+import dev.joaomanoel.arvore.util.Consistencia.Rotina;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -21,39 +18,39 @@ import org.springframework.stereotype.Service;
 public class ObjetivoService {
 
     private final ObjetivoRepository objetivoRepository;
-    private final AtividadeRepository atividadeRepository;
-    private final AgendaSemanalRepository agendaSemanalRepository;
+    private final CatalogoService catalogoService;
     private final ProgressoService progressoService;
 
     public ObjetivoService(
             ObjetivoRepository objetivoRepository,
-            AtividadeRepository atividadeRepository,
-            AgendaSemanalRepository agendaSemanalRepository,
+            CatalogoService catalogoService,
             ProgressoService progressoService) {
         this.objetivoRepository = objetivoRepository;
-        this.atividadeRepository = atividadeRepository;
-        this.agendaSemanalRepository = agendaSemanalRepository;
+        this.catalogoService = catalogoService;
         this.progressoService = progressoService;
     }
 
     public List<ObjetivoComAtividadesDTO> listarPorArea(UUID areaId) {
-        return objetivoRepository.findAllByAreaId(areaId).stream()
-                .map(this::montarComAtividades)
+        Catalogo catalogo = catalogoService.carregar();
+        ProgressoService.Semana semana = progressoService.semanaAtual();
+        return catalogo.objetivosDe(areaId).stream()
+                .map(objetivo -> montarComAtividades(objetivo, catalogo, semana))
                 .toList();
     }
 
-    private ObjetivoComAtividadesDTO montarComAtividades(Objetivo objetivo) {
-        List<Atividade> atividades = atividadeRepository.findAllByObjetivoId(objetivo.getId());
-        List<UUID> atividadeIds = atividades.stream().map(Atividade::getId).toList();
-
+    /** O progresso é o do próprio objetivo, qualquer que seja o status: o card mostra pausados também. */
+    private ObjetivoComAtividadesDTO montarComAtividades(
+            Objetivo objetivo, Catalogo catalogo, ProgressoService.Semana semana) {
         return new ObjetivoComAtividadesDTO(
                 objetivo.getId(),
                 objetivo.getAreaId(),
                 objetivo.getDescricao(),
                 objetivo.getPrazo(),
                 objetivo.getStatus(),
-                progressoService.calcular(atividadeIds),
-                atividades.stream().map(this::paraDTO).toList());
+                semana.progresso(catalogo.rotinasDe(objetivo)),
+                catalogo.atividadesDe(objetivo.getId()).stream()
+                        .map(atividade -> paraDTO(atividade, catalogo.rotina(atividade.getId())))
+                        .toList());
     }
 
     public ObjetivoDTO editar(UUID id, EditarObjetivoRequest requisicao) {
@@ -92,12 +89,8 @@ public class ObjetivoService {
                 objetivo.getStatus());
     }
 
-    private AtividadeDTO paraDTO(Atividade atividade) {
-        List<DiaSemana> diasAgendados =
-                agendaSemanalRepository.findAllByAtividadeId(atividade.getId()).stream()
-                        .map(AgendaSemanal::getDiaSemana)
-                        .toList();
+    private AtividadeDTO paraDTO(Atividade atividade, Rotina rotina) {
         return new AtividadeDTO(
-                atividade.getId(), atividade.getObjetivoId(), atividade.getNome(), diasAgendados);
+                atividade.getId(), atividade.getObjetivoId(), atividade.getNome(), List.copyOf(rotina.dias()));
     }
 }
