@@ -76,10 +76,73 @@ export interface NotaComArea {
 export interface ItemHoje {
   atividadeId: string
   atividadeNome: string
+  objetivoId: string
   objetivoDescricao: string
   areaId: string
   areaNome: string
   areaCorTema: string | null
-  concluidoHoje: boolean
+  concluido: boolean
   streakAtual: number
+}
+
+export interface DiaHoje {
+  data: string
+  hoje: string
+  editavel: boolean
+  itens: ItemHoje[]
+}
+
+export interface DiaConsistencia {
+  data: string
+  planejado: number
+  concluido: number
+}
+
+export interface SerieDia extends DiaConsistencia {
+  concluidoPorArea: { areaId: string; concluido: number }[]
+}
+
+export interface AreaConsistencia {
+  areaId: string
+  nome: string
+  corTema: string | null
+  planejado: number
+  concluido: number
+  taxa: number | null
+}
+
+export interface DiaSemanaConsistencia {
+  dia: DiaSemana
+  planejado: number
+  concluido: number
+  taxa: number | null
+}
+
+export interface AtividadeConsistencia {
+  atividadeId: string
+  nome: string
+  objetivoDescricao: string
+  areaId: string
+  areaNome: string
+  areaCorTema: string | null
+  planejado: number
+  concluido: number
+  taxa: number | null
+  streakAtual: number
+  maiorSequencia: number
+}
+
+export interface ResumoInsights {
+  inicio: string
+  fim: string
+  planejado: number
+  concluido: number
+  taxa: number | null
+  taxaPeriodoAnterior: number | null
+  diasComPlano: number
+  diasPerfeitos: number
+  serie: SerieDia[]
+  porArea: AreaConsistencia[]
+  porDiaSemana: DiaSemanaConsistencia[]
+  atividades: AtividadeConsistencia[]
 }

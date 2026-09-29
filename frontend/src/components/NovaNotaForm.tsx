@@ -38,7 +38,7 @@ export function NovaNotaForm({ areaId }: { areaId: string }) {
     return (
       <button
         onClick={() => setAberto(true)}
-        className="flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+        className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-sm text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
       >
         <IconPlus className="h-4 w-4" />
         Nova nota
@@ -47,7 +47,7 @@ export function NovaNotaForm({ areaId }: { areaId: string }) {
   }
 
   return (
-    <form onSubmit={aoEnviar} className="max-w-md space-y-3 rounded-lg border border-line bg-surface p-4">
+    <form onSubmit={aoEnviar} className="w-full space-y-3 rounded-xl border border-line-strong bg-surface p-4">
       <div className="space-y-1">
         <label className="text-sm text-ink-muted" htmlFor="titulo">
           Título

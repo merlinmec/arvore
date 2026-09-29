@@ -9,6 +9,7 @@ import dev.joaomanoel.arvore.entity.AgendaSemanal;
 import dev.joaomanoel.arvore.entity.Atividade;
 import dev.joaomanoel.arvore.entity.DiaSemana;
 import dev.joaomanoel.arvore.entity.Objetivo;
+import dev.joaomanoel.arvore.exception.NaoEncontradoException;
 import dev.joaomanoel.arvore.repository.AgendaSemanalRepository;
 import dev.joaomanoel.arvore.repository.AtividadeRepository;
 import dev.joaomanoel.arvore.repository.ObjetivoRepository;
@@ -59,7 +60,7 @@ public class ObjetivoService {
         Objetivo objetivo =
                 objetivoRepository
                         .findById(id)
-                        .orElseThrow(() -> new IllegalArgumentException("Objetivo não encontrado"));
+                        .orElseThrow(() -> new NaoEncontradoException("Objetivo não encontrado"));
         objetivo.setDescricao(requisicao.descricao());
         objetivo.setPrazo(requisicao.prazo());
         objetivo.setStatus(requisicao.status());
