@@ -1,10 +1,13 @@
 package dev.joaomanoel.arvore.controller;
 
-import dev.joaomanoel.arvore.dto.ItemHojeDTO;
+import dev.joaomanoel.arvore.dto.DiaHojeDTO;
 import dev.joaomanoel.arvore.service.HojeService;
-import java.util.List;
+import dev.joaomanoel.arvore.util.Datas;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -18,7 +21,8 @@ public class HojeController {
     }
 
     @GetMapping
-    public List<ItemHojeDTO> listar() {
-        return hojeService.listar();
+    public DiaHojeDTO listar(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
+        return hojeService.listar(data != null ? data : Datas.hoje());
     }
 }
