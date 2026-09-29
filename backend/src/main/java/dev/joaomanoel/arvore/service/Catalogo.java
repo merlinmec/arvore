@@ -3,15 +3,14 @@ package dev.joaomanoel.arvore.service;
 import dev.joaomanoel.arvore.entity.AgendaSemanal;
 import dev.joaomanoel.arvore.entity.Area;
 import dev.joaomanoel.arvore.entity.Atividade;
-import dev.joaomanoel.arvore.entity.DiaSemana;
 import dev.joaomanoel.arvore.entity.Objetivo;
 import dev.joaomanoel.arvore.entity.StatusObjetivo;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
+import dev.joaomanoel.arvore.util.Consistencia.Vigencia;
 import dev.joaomanoel.arvore.util.Datas;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,14 +52,18 @@ public class Catalogo {
         this.atividadesPorObjetivo =
                 atividades.stream().collect(Collectors.groupingBy(Atividade::getObjetivoId));
 
-        Map<UUID, Set<DiaSemana>> diasPorAtividade =
+        Map<UUID, List<Vigencia>> gradePorAtividade =
                 agendas.stream()
                         .collect(
                                 Collectors.groupingBy(
                                         AgendaSemanal::getAtividadeId,
                                         Collectors.mapping(
-                                                AgendaSemanal::getDiaSemana,
-                                                Collectors.toCollection(() -> EnumSet.noneOf(DiaSemana.class)))));
+                                                agenda ->
+                                                        new Vigencia(
+                                                                agenda.getDiaSemana(),
+                                                                agenda.getVigenteDe(),
+                                                                agenda.getVigenteAte()),
+                                                Collectors.toList())));
         this.rotinas =
                 atividades.stream()
                         .collect(
@@ -70,9 +73,8 @@ public class Catalogo {
                                                 new Rotina(
                                                         atividade.getId(),
                                                         Datas.dataDe(atividade.getCriadoEm()),
-                                                        diasPorAtividade.getOrDefault(
-                                                                atividade.getId(),
-                                                                EnumSet.noneOf(DiaSemana.class)))));
+                                                        gradePorAtividade.getOrDefault(
+                                                                atividade.getId(), List.of()))));
     }
 
     private static <T> Map<UUID, T> indexar(Collection<T> itens, Function<T, UUID> id) {
