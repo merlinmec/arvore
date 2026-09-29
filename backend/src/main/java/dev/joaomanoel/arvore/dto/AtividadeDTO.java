@@ -4,4 +4,6 @@ import dev.joaomanoel.arvore.entity.DiaSemana;
 import java.util.List;
 import java.util.UUID;
 
-public record AtividadeDTO(UUID id, UUID objetivoId, String nome, List<DiaSemana> diasAgendados) {}
+/** {@code vezesPorSemana} vem preenchido quando a atividade segue uma meta semanal em vez de dias fixos. */
+public record AtividadeDTO(
+        UUID id, UUID objetivoId, String nome, List<DiaSemana> diasAgendados, Integer vezesPorSemana) {}

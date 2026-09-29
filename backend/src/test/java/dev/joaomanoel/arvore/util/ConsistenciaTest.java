@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.joaomanoel.arvore.dto.ProgressoDTO;
 import dev.joaomanoel.arvore.entity.DiaSemana;
+import dev.joaomanoel.arvore.util.Consistencia.Cota;
+import dev.joaomanoel.arvore.util.Consistencia.Dia;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
 import dev.joaomanoel.arvore.util.Consistencia.Vigencia;
 import java.time.LocalDate;
@@ -79,6 +81,109 @@ class ConsistenciaTest {
 
         assertThat(rotina.diasAtuais())
                 .containsExactly(DiaSemana.SEGUNDA, DiaSemana.QUARTA, DiaSemana.DOMINGO);
+    }
+
+    // --- meta semanal (N vezes por semana, em qualquer dia) ---
+
+    private static final LocalDate DOMINGO = SEGUNDA.plusDays(6);
+
+    private static Rotina vezesPorSemana(int vezes, LocalDate desde) {
+        return new Rotina(UUID.randomUUID(), desde, List.of(), List.of(new Cota(vezes, desde, null)));
+    }
+
+    private static List<Dia> semanaDe(Rotina rotina, Set<LocalDate> feitas, LocalDate segunda) {
+        return java.util.stream.IntStream.range(0, 7)
+                .mapToObj(i -> Consistencia.dia(rotina, feitas, segunda.plusDays(i)))
+                .toList();
+    }
+
+    @Test
+    void metaSemanalSoFalhaQuandoNaoDaMaisTempo() {
+        Rotina tresVezes = vezesPorSemana(3, SEGUNDA.minusWeeks(1));
+
+        assertThat(semanaDe(tresVezes, Set.of(), SEGUNDA))
+                .containsExactly(
+                        new Dia(0, 0), new Dia(0, 0), new Dia(0, 0), new Dia(0, 0),
+                        new Dia(1, 0), new Dia(1, 0), new Dia(1, 0));
+    }
+
+    @Test
+    void metaSemanalContaOsDiasFeitosEAFaltaNoFim() {
+        Rotina tresVezes = vezesPorSemana(3, SEGUNDA.minusWeeks(1));
+
+        assertThat(semanaDe(tresVezes, Set.of(SEGUNDA, QUARTA), SEGUNDA))
+                .containsExactly(
+                        new Dia(1, 1), new Dia(0, 0), new Dia(1, 1), new Dia(0, 0),
+                        new Dia(0, 0), new Dia(0, 0), new Dia(1, 0));
+    }
+
+    @Test
+    void vezesAlemDaMetaNaoContam() {
+        Rotina duasVezes = vezesPorSemana(2, SEGUNDA.minusWeeks(1));
+        Set<LocalDate> feitas = Set.of(SEGUNDA, SEGUNDA.plusDays(1), QUARTA);
+
+        ProgressoDTO progresso =
+                Consistencia.progresso(List.of(duasVezes), Map.of(duasVezes.atividadeId(), feitas), SEGUNDA, DOMINGO);
+
+        assertThat(Consistencia.dia(duasVezes, feitas, QUARTA)).isEqualTo(new Dia(0, 0));
+        assertThat(progresso.planejado()).isEqualTo(2);
+        assertThat(progresso.percentual()).isEqualTo(100);
+    }
+
+    @Test
+    void semanaIncompletaLimitaAMetaAosDiasQueRestavam() {
+        // Meta de 5x criada no sábado: só sobram sábado e domingo.
+        Rotina cincoVezes = vezesPorSemana(5, SEGUNDA.plusDays(5));
+
+        ProgressoDTO progresso = Consistencia.progresso(List.of(cincoVezes), Map.of(), SEGUNDA, DOMINGO);
+
+        assertThat(progresso.planejado()).isEqualTo(2);
+        assertThat(Consistencia.dia(cincoVezes, Set.of(), SEGUNDA.plusDays(5))).isEqualTo(new Dia(1, 0));
+    }
+
+    @Test
+    void mudarAMetaNoMeioDaSemanaValeParaASemanaInteira() {
+        Rotina trocou =
+                new Rotina(
+                        UUID.randomUUID(),
+                        SEGUNDA.minusWeeks(1),
+                        List.of(),
+                        List.of(new Cota(2, SEGUNDA.minusWeeks(1), QUARTA), new Cota(4, QUARTA, null)));
+
+        ProgressoDTO semanaPassada =
+                Consistencia.progresso(List.of(trocou), Map.of(), SEGUNDA.minusWeeks(1), DOMINGO.minusWeeks(1));
+        ProgressoDTO estaSemana = Consistencia.progresso(List.of(trocou), Map.of(), SEGUNDA, DOMINGO);
+
+        assertThat(semanaPassada.planejado()).isEqualTo(2);
+        assertThat(estaSemana.planejado()).isEqualTo(4);
+        assertThat(trocou.vezesAtuais()).isEqualTo(4);
+    }
+
+    @Test
+    void sequenciaDaMetaSemanalAtravessaSemanas() {
+        Rotina tresVezes = vezesPorSemana(3, SEGUNDA.minusWeeks(1));
+        Set<LocalDate> feitas =
+                Set.of(SEGUNDA.minusWeeks(1), QUARTA.minusWeeks(1), SEXTA.minusWeeks(1), SEGUNDA);
+
+        assertThat(Consistencia.sequenciaAtual(tresVezes, feitas, QUARTA, LIMITE)).isEqualTo(4);
+        assertThat(Consistencia.semana(tresVezes, feitas, QUARTA)).isEqualTo(new Consistencia.Semana(3, 1));
+    }
+
+    @Test
+    void semanaComMetaPerdidaQuebraASequencia() {
+        Rotina duasVezes = vezesPorSemana(2, SEGUNDA.minusWeeks(2));
+        // Semana retrasada: 2 de 2. Semana passada: 1 de 2. Esta semana: segunda.
+        Set<LocalDate> feitas =
+                Set.of(SEGUNDA.minusWeeks(2), QUARTA.minusWeeks(2), SEGUNDA.minusWeeks(1), SEGUNDA);
+
+        assertThat(Consistencia.sequenciaAtual(duasVezes, feitas, SEGUNDA, LIMITE)).isEqualTo(1);
+        assertThat(Consistencia.maiorSequencia(duasVezes, feitas, SEGUNDA.minusWeeks(2), SEGUNDA))
+                .isEqualTo(3);
+    }
+
+    @Test
+    void diaFixoNaoTemSemana() {
+        assertThat(Consistencia.semana(segQuaSex, Set.of(), SEGUNDA)).isNull();
     }
 
     @Test
