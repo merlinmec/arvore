@@ -80,7 +80,7 @@ A API sobe em `http://localhost:8080`.
 | Método | Rota | O que faz |
 |---|---|---|
 | `GET` | `/api/hoje?data=AAAA-MM-DD` | Plano do dia (padrão: hoje), com `editavel=false` para datas futuras |
-| `POST`/`DELETE` | `/api/atividades/{id}/conclusao?data=` | Marca/desmarca a conclusão (aceita dias passados, recusa futuros) |
+| `POST`/`DELETE` | `/api/atividades/{id}/conclusao?data=&valor=` | Marca/desmarca a conclusão (aceita dias passados, recusa futuros); `valor` opcional soma na meta quantitativa do objetivo, e marcar de novo com valor corrige o do dia |
 | `GET` | `/api/insights/resumo?dias=30&areaId=` | Consistência do período (1–365 dias), opcionalmente filtrada por área e subáreas |
 | `GET` | `/api/insights/historico?inicio=&fim=&areaId=` | Planejado x concluído por dia (padrão: últimas 53 semanas) |
 | `POST`/`DELETE` | `/api/atividades/{id}/agenda/{DIA}` | Coloca/tira um dia fixo da grade (vale a partir de hoje) |
