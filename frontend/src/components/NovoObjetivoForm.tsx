@@ -1,11 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { api } from '../lib/api'
+import { lerNumero } from '../lib/numeros'
 import { IconPlus } from './icons'
 
 export function NovoObjetivoForm({ areaId }: { areaId: string }) {
   const [descricao, setDescricao] = useState('')
   const [prazo, setPrazo] = useState('')
+  const [metaValor, setMetaValor] = useState('')
+  const [metaUnidade, setMetaUnidade] = useState('')
   const [aberto, setAberto] = useState(false)
   const queryClient = useQueryClient()
 
@@ -14,11 +17,15 @@ export function NovoObjetivoForm({ areaId }: { areaId: string }) {
       api.post(`/areas/${areaId}/objetivos`, {
         descricao,
         prazo: prazo || null,
+        metaValor: lerNumero(metaValor),
+        metaUnidade: metaUnidade.trim() || null,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['objetivos', areaId] })
       setDescricao('')
       setPrazo('')
+      setMetaValor('')
+      setMetaUnidade('')
       setAberto(false)
     },
   })
@@ -67,6 +74,30 @@ export function NovoObjetivoForm({ areaId }: { areaId: string }) {
           className="w-full rounded-md border border-line bg-canvas px-3 py-2 text-ink focus:border-accent"
         />
       </div>
+
+      <fieldset className="space-y-1">
+        <legend className="text-sm text-ink-muted">Meta quantitativa (opcional)</legend>
+        <div className="flex gap-2">
+          <input
+            inputMode="decimal"
+            value={metaValor}
+            onChange={(evento) => setMetaValor(evento.target.value)}
+            placeholder="100"
+            aria-label="Valor da meta"
+            required={metaUnidade.trim() !== ''}
+            className="w-28 rounded-md border border-line bg-canvas px-3 py-2 tabular-nums text-ink focus:border-accent"
+          />
+          <input
+            value={metaUnidade}
+            onChange={(evento) => setMetaUnidade(evento.target.value)}
+            placeholder="km, páginas, horas..."
+            maxLength={20}
+            aria-label="Unidade da meta"
+            required={metaValor.trim() !== ''}
+            className="min-w-0 flex-1 rounded-md border border-line bg-canvas px-3 py-2 text-ink focus:border-accent"
+          />
+        </div>
+      </fieldset>
 
       <div className="flex gap-2">
         <button

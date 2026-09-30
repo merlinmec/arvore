@@ -2,6 +2,7 @@ package dev.joaomanoel.arvore.controller;
 
 import dev.joaomanoel.arvore.service.ConclusaoService;
 import dev.joaomanoel.arvore.util.Datas;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,8 +28,9 @@ public class ConclusaoController {
     @PostMapping
     public ResponseEntity<Void> marcar(
             @PathVariable UUID atividadeId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
-        conclusaoService.marcar(atividadeId, data != null ? data : Datas.hoje());
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
+            @RequestParam(required = false) BigDecimal valor) {
+        conclusaoService.marcar(atividadeId, data != null ? data : Datas.hoje(), valor);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
