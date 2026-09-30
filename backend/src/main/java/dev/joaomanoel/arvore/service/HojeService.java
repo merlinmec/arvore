@@ -10,8 +10,10 @@ import dev.joaomanoel.arvore.repository.ConclusaoRepository;
 import dev.joaomanoel.arvore.util.Consistencia;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
 import dev.joaomanoel.arvore.util.Datas;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,14 +50,20 @@ public class HojeService {
         // Começa numa segunda: a meta semanal olha a semana inteira de cada dia.
         LocalDate inicioJanela = Datas.inicioDaSemana(data.minusDays(JANELA_STREAK_DIAS));
         List<UUID> ids = doDia.stream().map(Atividade::getId).toList();
-        Map<UUID, Set<LocalDate>> concluidasPorAtividade =
+        List<Conclusao> conclusoes =
                 ids.isEmpty()
-                        ? Map.of()
-                        : conclusaoRepository.findAllByAtividadeIdInAndDataBetween(ids, inicioJanela, data).stream()
-                                .collect(
-                                        Collectors.groupingBy(
-                                                Conclusao::getAtividadeId,
-                                                Collectors.mapping(Conclusao::getData, Collectors.toSet())));
+                        ? List.of()
+                        : conclusaoRepository.findAllByAtividadeIdInAndDataBetween(ids, inicioJanela, data);
+        Map<UUID, Set<LocalDate>> concluidasPorAtividade =
+                conclusoes.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        Conclusao::getAtividadeId,
+                                        Collectors.mapping(Conclusao::getData, Collectors.toSet())));
+        Map<UUID, BigDecimal> valoresDoDia = new HashMap<>();
+        conclusoes.stream()
+                .filter(conclusao -> conclusao.getData().equals(data) && conclusao.getValor() != null)
+                .forEach(conclusao -> valoresDoDia.put(conclusao.getAtividadeId(), conclusao.getValor()));
 
         List<ItemHojeDTO> itens =
                 doDia.stream()
@@ -70,7 +78,12 @@ public class HojeService {
                                     Set<LocalDate> concluidas =
                                             concluidasPorAtividade.getOrDefault(atividade.getId(), Set.of());
                                     return montarItem(
-                                            catalogo, atividade, concluidas, data, inicioJanela);
+                                            catalogo,
+                                            atividade,
+                                            concluidas,
+                                            valoresDoDia.get(atividade.getId()),
+                                            data,
+                                            inicioJanela);
                                 })
                         .sorted(
                                 Comparator.comparing(ItemHojeDTO::areaNome, String.CASE_INSENSITIVE_ORDER)
@@ -84,6 +97,7 @@ public class HojeService {
             Catalogo catalogo,
             Atividade atividade,
             Set<LocalDate> concluidas,
+            BigDecimal valor,
             LocalDate data,
             LocalDate inicioJanela) {
         Objetivo objetivo = catalogo.objetivoDe(atividade);
@@ -102,7 +116,9 @@ public class HojeService {
                 concluidas.contains(data),
                 Consistencia.sequenciaAtual(rotina, concluidas, data, inicioJanela),
                 semana == null ? null : semana.meta(),
-                semana == null ? null : semana.feitas());
+                semana == null ? null : semana.feitas(),
+                objetivo.getMetaUnidade(),
+                valor);
     }
 
     private static boolean podeEntrarNoDia(Rotina rotina, LocalDate data) {

@@ -3,11 +3,14 @@ import { useState, type FormEvent } from 'react'
 import { api } from '../lib/api'
 import { corDaArea } from '../lib/cores'
 import { diferencaEmDias, formatarCurto, hojeIso } from '../lib/datas'
+import { formatarNumero, lerNumero } from '../lib/numeros'
 import {
   DIAS_SEMANA,
   type Atividade,
   type DiaSemana,
+  type Meta,
   type ObjetivoComAtividades,
+  type SituacaoMeta,
   type StatusObjetivo,
 } from '../lib/types'
 import { IconCalendar, IconPlus, IconTrash } from './icons'
@@ -45,6 +48,118 @@ function Prazo({ prazo }: { prazo: string }) {
       <IconCalendar className="h-3.5 w-3.5" />
       {formatarCurto(prazo)} · {texto}
     </p>
+  )
+}
+
+const SITUACAO: Record<SituacaoMeta, { rotulo: string; estilo: string } | null> = {
+  CONCLUIDA: { rotulo: 'Meta batida', estilo: 'bg-accent-soft text-accent-strong' },
+  ADIANTADA: { rotulo: 'Adiantada', estilo: 'bg-accent-soft text-accent-strong' },
+  NO_RITMO: { rotulo: 'No ritmo', estilo: 'bg-surface-3 text-ink-muted' },
+  ATRASADA: { rotulo: 'Atrasada', estilo: 'bg-warning-soft text-warning' },
+  VENCIDA: { rotulo: 'Prazo vencido', estilo: 'bg-danger-soft text-danger' },
+  SEM_PRAZO: null,
+}
+
+function MetaResumo({ meta, cor }: { meta: Meta; cor: string }) {
+  const situacao = SITUACAO[meta.situacao]
+  const marcador = meta.esperadoHoje === null ? null : Math.min(100, (meta.esperadoHoje / meta.valor) * 100)
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-3 text-xs">
+        <p className="tabular-nums text-ink-faint">
+          <span className="text-sm font-medium text-ink">{formatarNumero(meta.acumulado)}</span> de{' '}
+          {formatarNumero(meta.valor)} {meta.unidade}
+        </p>
+        {situacao && (
+          <span className={`rounded-full px-2 py-0.5 font-medium ${situacao.estilo}`}>{situacao.rotulo}</span>
+        )}
+      </div>
+      <div className="relative h-2 rounded-full bg-surface-3">
+        <div
+          className="h-full rounded-full transition-[width] duration-500 ease-out"
+          style={{ width: `${meta.percentual}%`, backgroundColor: cor }}
+        />
+        {marcador !== null && meta.situacao !== 'CONCLUIDA' && (
+          <span
+            className="absolute -top-0.5 h-3 w-0.5 rounded-full bg-ink-muted"
+            style={{ left: `calc(${marcador}% - 1px)` }}
+            title={`Num ritmo constante, estaria em ${formatarNumero(meta.esperadoHoje!)} ${meta.unidade} hoje`}
+          />
+        )}
+      </div>
+      {meta.ritmoSemanal !== null && (
+        <p className="text-xs text-ink-faint">
+          Faltam {formatarNumero(meta.restante)} {meta.unidade}: cerca de{' '}
+          <span className="tabular-nums text-ink-muted">
+            {formatarNumero(meta.ritmoSemanal)} {meta.unidade}
+          </span>{' '}
+          por semana até o prazo.
+        </p>
+      )}
+    </div>
+  )
+}
+
+function MetaForm({
+  meta,
+  aoSalvar,
+  aoCancelar,
+  salvando,
+}: {
+  meta: Meta | null
+  aoSalvar: (valor: number | null, unidade: string | null) => void
+  aoCancelar: () => void
+  salvando: boolean
+}) {
+  const [valor, setValor] = useState(meta ? String(meta.valor).replace('.', ',') : '')
+  const [unidade, setUnidade] = useState(meta?.unidade ?? '')
+
+  function aoEnviar(evento: FormEvent) {
+    evento.preventDefault()
+    const numero = lerNumero(valor)
+    if (numero === null || numero <= 0 || !unidade.trim()) return
+    aoSalvar(numero, unidade.trim())
+  }
+
+  return (
+    <form onSubmit={aoEnviar} className="flex flex-wrap items-center gap-2">
+      <input
+        autoFocus
+        inputMode="decimal"
+        value={valor}
+        onChange={(evento) => setValor(evento.target.value)}
+        placeholder="100"
+        aria-label="Valor da meta"
+        className="w-20 rounded-md border border-line bg-canvas px-2 py-1 text-sm tabular-nums text-ink focus:border-accent"
+      />
+      <input
+        value={unidade}
+        onChange={(evento) => setUnidade(evento.target.value)}
+        placeholder="km"
+        maxLength={20}
+        aria-label="Unidade da meta"
+        className="w-24 rounded-md border border-line bg-canvas px-2 py-1 text-sm text-ink focus:border-accent"
+      />
+      <button
+        type="submit"
+        disabled={salvando}
+        className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+      >
+        Salvar
+      </button>
+      {meta && (
+        <button
+          type="button"
+          onClick={() => aoSalvar(null, null)}
+          className="text-xs text-ink-faint hover:text-danger"
+        >
+          Remover meta
+        </button>
+      )}
+      <button type="button" onClick={aoCancelar} className="text-xs text-ink-faint hover:text-ink-muted">
+        Cancelar
+      </button>
+    </form>
   )
 }
 
@@ -147,6 +262,7 @@ function AtividadeItem({ atividade, areaId, cor }: { atividade: Atividade; areaI
 
 export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtividades; corArea?: string | null }) {
   const [nomeAtividade, setNomeAtividade] = useState('')
+  const [editandoMeta, setEditandoMeta] = useState(false)
   const queryClient = useQueryClient()
   const cor = corDaArea(corArea)
   const ativo = objetivo.status === 'ATIVO'
@@ -171,14 +287,19 @@ export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtivi
     },
   })
 
-  const alterarStatus = useMutation({
-    mutationFn: (status: StatusObjetivo) =>
+  // o PATCH substitui tudo: cada edição parcial manda os outros campos como estão
+  const editar = useMutation({
+    mutationFn: (mudancas: { status?: StatusObjetivo; metaValor?: number | null; metaUnidade?: string | null }) =>
       api.patch(`/areas/${objetivo.areaId}/objetivos/${objetivo.id}`, {
         descricao: objetivo.descricao,
         prazo: objetivo.prazo,
-        status,
+        status: objetivo.status,
+        metaValor: objetivo.meta?.valor ?? null,
+        metaUnidade: objetivo.meta?.unidade ?? null,
+        ...mudancas,
       }),
     onSuccess: async () => {
+      setEditandoMeta(false)
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['objetivos', objetivo.areaId] }),
         queryClient.invalidateQueries({ queryKey: ['hoje'] }),
@@ -205,7 +326,7 @@ export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtivi
           <div className="flex shrink-0 items-center gap-1">
             <select
               value={objetivo.status}
-              onChange={(evento) => alterarStatus.mutate(evento.target.value as StatusObjetivo)}
+              onChange={(evento) => editar.mutate({ status: evento.target.value as StatusObjetivo })}
               aria-label="Status do objetivo"
               className={`cursor-pointer appearance-none rounded-full border-none px-2.5 py-0.5 text-xs font-medium ${STATUS[objetivo.status].estilo}`}
             >
@@ -231,6 +352,33 @@ export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtivi
         </div>
 
         {objetivo.prazo && <Prazo prazo={objetivo.prazo} />}
+
+        {editandoMeta ? (
+          <MetaForm
+            meta={objetivo.meta}
+            salvando={editar.isPending}
+            aoCancelar={() => setEditandoMeta(false)}
+            aoSalvar={(metaValor, metaUnidade) => editar.mutate({ metaValor, metaUnidade })}
+          />
+        ) : objetivo.meta ? (
+          <button
+            type="button"
+            onClick={() => setEditandoMeta(true)}
+            aria-label="Editar meta"
+            className="block w-full rounded-md text-left"
+          >
+            <MetaResumo meta={objetivo.meta} cor={cor} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditandoMeta(true)}
+            className="flex items-center gap-1 text-xs text-ink-faint hover:text-ink-muted"
+          >
+            <IconPlus className="h-3.5 w-3.5" />
+            Meta quantitativa
+          </button>
+        )}
 
         {progresso.percentual !== null ? (
           <div className="flex items-center gap-3">

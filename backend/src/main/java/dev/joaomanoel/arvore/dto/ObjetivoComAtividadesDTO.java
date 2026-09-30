@@ -12,4 +12,5 @@ public record ObjetivoComAtividadesDTO(
         LocalDate prazo,
         StatusObjetivo status,
         ProgressoDTO progresso,
+        MetaDTO meta,
         List<AtividadeDTO> atividades) {}
