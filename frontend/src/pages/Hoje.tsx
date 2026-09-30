@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { IconCheck, IconChevronLeft, IconChevronRight, IconFlame, IconInbox } from '../components/icons'
 import { api } from '../lib/api'
 import { corDaArea } from '../lib/cores'
+import { lerNumero } from '../lib/numeros'
 import {
   formatarDiaSemana,
   formatarDiaSemanaLongo,
@@ -90,10 +91,12 @@ function ItemAtividade({
   item,
   editavel,
   aoAlternar,
+  aoRegistrarValor,
 }: {
   item: ItemHoje
   editavel: boolean
   aoAlternar: () => void
+  aoRegistrarValor: (valor: number) => void
 }) {
   return (
     <li
@@ -138,6 +141,15 @@ function ItemAtividade({
           )}
         </p>
       </div>
+      {item.metaUnidade !== null && (
+        <CampoValor
+          // remonta quando o valor salvo muda, pra o campo refletir o que está no servidor
+          key={item.valor ?? 'vazio'}
+          item={item}
+          editavel={editavel}
+          aoRegistrar={aoRegistrarValor}
+        />
+      )}
       {item.streakAtual > 0 && (
         <span
           className="flex shrink-0 items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium tabular-nums text-warning"
@@ -150,6 +162,42 @@ function ItemAtividade({
         </span>
       )}
     </li>
+  )
+}
+
+function CampoValor({
+  item,
+  editavel,
+  aoRegistrar,
+}: {
+  item: ItemHoje
+  editavel: boolean
+  aoRegistrar: (valor: number) => void
+}) {
+  const [texto, setTexto] = useState(item.valor === null ? '' : String(item.valor).replace('.', ','))
+
+  function confirmar() {
+    const valor = lerNumero(texto)
+    if (valor !== null && valor !== item.valor) aoRegistrar(valor)
+  }
+
+  return (
+    <label className="flex shrink-0 items-center gap-1 text-xs text-ink-faint">
+      <input
+        inputMode="decimal"
+        value={texto}
+        disabled={!editavel}
+        onChange={(evento) => setTexto(evento.target.value)}
+        onBlur={confirmar}
+        onKeyDown={(evento) => {
+          if (evento.key === 'Enter') evento.currentTarget.blur()
+        }}
+        placeholder="0"
+        aria-label={`Quanto de ${item.atividadeNome}, em ${item.metaUnidade}`}
+        className="w-14 rounded-md border border-line bg-canvas px-1.5 py-1 text-right text-sm tabular-nums text-ink placeholder:text-ink-faint focus:border-accent disabled:opacity-50"
+      />
+      {item.metaUnidade}
+    </label>
   )
 }
 
@@ -195,14 +243,48 @@ export function Hoje() {
     onError: (_erro, _item, contexto) => {
       if (contexto?.anterior) queryClient.setQueryData(['hoje', data], contexto.anterior)
     },
-    onSettled: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['hoje'] }),
-        queryClient.invalidateQueries({ queryKey: ['insights'] }),
-        queryClient.invalidateQueries({ queryKey: ['areas'] }),
-      ])
-    },
+    onSettled: invalidarDerivados,
   })
+
+  // registrar um valor ("5 km") também conclui a atividade no dia, se ainda não estava
+  const registrarValor = useMutation({
+    mutationFn: ({ item, valor }: { item: ItemHoje; valor: number }) =>
+      api.post(`/atividades/${item.atividadeId}/conclusao`, null, { params: { data, valor } }),
+    onMutate: async ({ item, valor }) => {
+      await queryClient.cancelQueries({ queryKey: ['hoje', data] })
+      const anterior = queryClient.getQueryData<DiaHoje>(['hoje', data])
+      queryClient.setQueryData<DiaHoje>(['hoje', data], (atual) =>
+        atual && {
+          ...atual,
+          itens: atual.itens.map((i) =>
+            i.atividadeId === item.atividadeId
+              ? {
+                  ...i,
+                  concluido: true,
+                  valor,
+                  feitasNaSemana:
+                    i.feitasNaSemana === null ? null : i.feitasNaSemana + (i.concluido ? 0 : 1),
+                }
+              : i,
+          ),
+        },
+      )
+      return { anterior }
+    },
+    onError: (_erro, _variaveis, contexto) => {
+      if (contexto?.anterior) queryClient.setQueryData(['hoje', data], contexto.anterior)
+    },
+    onSettled: invalidarDerivados,
+  })
+
+  async function invalidarDerivados() {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['hoje'] }),
+      queryClient.invalidateQueries({ queryKey: ['insights'] }),
+      queryClient.invalidateQueries({ queryKey: ['areas'] }),
+      queryClient.invalidateQueries({ queryKey: ['objetivos'] }),
+    ])
+  }
 
   const itens = useMemo(() => dia?.itens ?? [], [dia])
   const concluidas = itens.filter((item) => item.concluido).length
@@ -314,6 +396,7 @@ export function Hoje() {
                       item={item}
                       editavel={editavel}
                       aoAlternar={() => alternar.mutate(item)}
+                      aoRegistrarValor={(valor) => registrarValor.mutate({ item, valor })}
                     />
                   ))}
                 </ul>

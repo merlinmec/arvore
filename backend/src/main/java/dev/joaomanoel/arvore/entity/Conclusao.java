@@ -1,6 +1,7 @@
 package dev.joaomanoel.arvore.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -24,6 +25,10 @@ public class Conclusao {
 
     @Column(nullable = false)
     private LocalDate data;
+
+    /** Quanto foi feito ("5" km), somado na meta quantitativa do objetivo; opcional. */
+    @Column(precision = 12, scale = 2)
+    private BigDecimal valor;
 
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;

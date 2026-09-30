@@ -45,6 +45,20 @@ export interface Atividade {
   vezesPorSemana: number | null
 }
 
+export type SituacaoMeta = 'CONCLUIDA' | 'ADIANTADA' | 'NO_RITMO' | 'ATRASADA' | 'VENCIDA' | 'SEM_PRAZO'
+
+/** Meta quantitativa do objetivo; esperadoHoje e ritmoSemanal só existem com prazo. */
+export interface Meta {
+  valor: number
+  unidade: string
+  acumulado: number
+  percentual: number
+  restante: number
+  esperadoHoje: number | null
+  ritmoSemanal: number | null
+  situacao: SituacaoMeta
+}
+
 export interface ObjetivoComAtividades {
   id: string
   areaId: string
@@ -52,6 +66,7 @@ export interface ObjetivoComAtividades {
   prazo: string | null
   status: StatusObjetivo
   progresso: Progresso
+  meta: Meta | null
   atividades: Atividade[]
 }
 
@@ -88,6 +103,9 @@ export interface ItemHoje {
   /** Só nas atividades com meta semanal: a meta e quantas vezes já foram feitas na semana até o dia. */
   metaSemanal: number | null
   feitasNaSemana: number | null
+  /** Só quando o objetivo tem meta quantitativa: a unidade e o valor registrado nesse dia. */
+  metaUnidade: string | null
+  valor: number | null
 }
 
 export interface DiaHoje {
