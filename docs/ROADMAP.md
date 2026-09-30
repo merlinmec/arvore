@@ -68,7 +68,7 @@ Inspiração: Loop Habit Tracker, Streaks, "Goal-Tab".
 
 - [x] **Grade semanal versionada** (29/09/2026): `agenda_semanal` ganhou `vigente_de`/`vigente_ate`. Mudar os dias de uma atividade vale a partir de hoje e não reescreve mais o "planejado" do passado
 - [x] **Frequência flexível** (29/09/2026): além de dias fixos, "N vezes por semana" em qualquer dia (`frequencia_semanal`, com vigência). Cada dia feito conta 1 de 1 até a meta, e a falha cai no dia em que deixou de dar tempo de cumprir a semana, então heatmap, taxa e streak continuam somando por dia
-- [ ] **Meta quantitativa no objetivo:** ex. "correr 100 km até dezembro"; a conclusão pode registrar um valor (5 km) e o objetivo mostra o acumulado contra a meta e o ritmo necessário até o prazo
+- [x] **Meta quantitativa no objetivo** (30/09/2026): ex. "correr 100 km até dezembro". A conclusão registra um valor opcional (5 km), e o card mostra o acumulado contra a meta, onde estaria num ritmo constante, a situação (adiantada, no ritmo, atrasada) e quanto falta por semana até o prazo
 - [ ] **Hábito negativo:** "não fumar", onde o registro é a falha
 - [ ] **Pontuação com decaimento** (estilo Loop): uma falha isolada depois de meses de consistência pesa menos que um streak zerado
 
