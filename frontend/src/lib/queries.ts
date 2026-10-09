@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from './api'
-import type { AreaArvore, DiaConsistencia, DiaHoje, ResumoInsights } from './types'
+import type { AreaArvore, DiaConsistencia, DiaHoje, ResumoInsights, Revisao, RevisaoSemana } from './types'
 
 /**
  * Hooks de leitura compartilhados. As chaves começam por um prefixo estável ('hoje', 'insights',
@@ -45,5 +45,22 @@ export function useResumo(dias: number, areaId: string | null) {
         })
       ).data,
     placeholderData: (anterior) => anterior,
+  })
+}
+
+/** Revisão da semana que contém a data (o backend leva qualquer dia pra segunda-feira). */
+export function useRevisao(data: string, habilitada = true) {
+  return useQuery({
+    queryKey: ['revisoes', 'semana', data],
+    queryFn: async () => (await api.get<RevisaoSemana>(`/revisoes/${data}`)).data,
+    placeholderData: (anterior) => anterior,
+    enabled: habilitada,
+  })
+}
+
+export function useRevisoes() {
+  return useQuery({
+    queryKey: ['revisoes', 'lista'],
+    queryFn: async () => (await api.get<Revisao[]>('/revisoes')).data,
   })
 }
