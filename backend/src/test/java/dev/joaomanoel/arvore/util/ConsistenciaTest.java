@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.joaomanoel.arvore.dto.ProgressoDTO;
 import dev.joaomanoel.arvore.entity.DiaSemana;
+import dev.joaomanoel.arvore.util.Consistencia.Abstencao;
 import dev.joaomanoel.arvore.util.Consistencia.Cota;
 import dev.joaomanoel.arvore.util.Consistencia.Dia;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
@@ -264,5 +265,57 @@ class ConsistenciaTest {
     void taxaNulaQuandoNadaFoiPlanejado() {
         assertThat(Consistencia.taxa(0, 0)).isNull();
         assertThat(Consistencia.taxa(4, 3)).isEqualTo(75);
+    }
+
+    // Hábito negativo: começou 4 semanas antes, e "hoje" é a quarta.
+    private final Rotina naoFumar =
+            new Rotina(UUID.randomUUID(), SEGUNDA.minusWeeks(4), List.of(), List.of(), new Abstencao(QUARTA));
+
+    @Test
+    void habitoNegativoValeTodoDiaDesdeACriacao() {
+        assertThat(naoFumar.planejadaEm(SEGUNDA.minusWeeks(4).minusDays(1))).isFalse();
+        assertThat(naoFumar.planejadaEm(SEGUNDA.plusDays(5))).isTrue();
+        assertThat(naoFumar.cotaEm(SEGUNDA)).isNull();
+    }
+
+    @Test
+    void habitoNegativoCumpreDiaSemRecaidaEFalhaNaRecaida() {
+        Set<LocalDate> recaidas = Set.of(SEGUNDA);
+
+        assertThat(Consistencia.dia(naoFumar, recaidas, SEGUNDA)).isEqualTo(new Dia(1, 0));
+        assertThat(Consistencia.dia(naoFumar, recaidas, SEGUNDA.plusDays(1))).isEqualTo(new Dia(1, 1));
+        // hoje sem recaída já conta como cumprido
+        assertThat(Consistencia.dia(naoFumar, recaidas, QUARTA)).isEqualTo(new Dia(1, 1));
+    }
+
+    @Test
+    void habitoNegativoNaoCumpreDiaQueAindaNaoChegou() {
+        assertThat(Consistencia.dia(naoFumar, Set.of(), QUARTA.plusDays(1))).isEqualTo(new Dia(1, 0));
+
+        ProgressoDTO semana = Consistencia.progresso(List.of(naoFumar), Map.of(), SEGUNDA, SEGUNDA.plusDays(6));
+        assertThat(semana.planejado()).isEqualTo(7);
+        assertThat(semana.concluido()).isEqualTo(3);
+    }
+
+    @Test
+    void sequenciaDoHabitoNegativoContaDiasLimposIncluindoHoje() {
+        Set<LocalDate> recaidas = Set.of(SEGUNDA.minusDays(1));
+
+        // segunda, terça e quarta limpas
+        assertThat(Consistencia.sequenciaAtual(naoFumar, recaidas, QUARTA, LIMITE)).isEqualTo(3);
+    }
+
+    @Test
+    void recaidaNaReferenciaZeraASequenciaDoHabitoNegativo() {
+        assertThat(Consistencia.sequenciaAtual(naoFumar, Set.of(QUARTA), QUARTA, LIMITE)).isZero();
+    }
+
+    @Test
+    void maiorSequenciaDoHabitoNegativoParaNaRecaida() {
+        Set<LocalDate> recaidas = Set.of(SEGUNDA.minusWeeks(1));
+        LocalDate inicio = SEGUNDA.minusWeeks(4);
+
+        // 21 dias limpos antes da recaída; depois dela, de terça passada até hoje, 9
+        assertThat(Consistencia.maiorSequencia(naoFumar, recaidas, inicio, QUARTA)).isEqualTo(21);
     }
 }
