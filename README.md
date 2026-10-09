@@ -8,7 +8,7 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 - **Objetivos** com prazo e status, e **atividades** encaixadas numa grade semanal
 - **Hábitos negativos** ("não fumar"): valem todo dia, e você registra só as recaídas
 - **Hoje**: plano do dia agrupado por área, navegação por data com a tira da semana, registro retroativo e sequência (streak) por atividade
-- **Painel**: taxa de conclusão com variação contra o período anterior, série diária por área, consistência por área e por dia da semana, heatmap anual e ranking de atividades, com filtro de período e de área
+- **Painel**: taxa de conclusão com variação contra o período anterior, série diária por área, consistência por área e por dia da semana, heatmap anual e ranking de atividades com a força de cada hábito (pontuação com decaimento), com filtro de período e de área
 - **Notas** em Markdown com tags que cruzam áreas
 
 Direção do produto, diretrizes e próximas fases: [`docs/ROADMAP.md`](docs/ROADMAP.md).

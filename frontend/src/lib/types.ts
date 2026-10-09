@@ -157,6 +157,8 @@ export interface AtividadeConsistencia {
   taxa: number | null
   streakAtual: number
   maiorSequencia: number
+  /** Força do hábito hoje (0–100, com decaimento), independente do período escolhido. */
+  forca: number | null
 }
 
 export interface ResumoInsights {

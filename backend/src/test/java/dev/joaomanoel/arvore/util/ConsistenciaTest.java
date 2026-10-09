@@ -11,10 +11,12 @@ import dev.joaomanoel.arvore.util.Consistencia.Rotina;
 import dev.joaomanoel.arvore.util.Consistencia.Vigencia;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class ConsistenciaTest {
@@ -317,5 +319,61 @@ class ConsistenciaTest {
 
         // 21 dias limpos antes da recaída; depois dela, de terça passada até hoje, 9
         assertThat(Consistencia.maiorSequencia(naoFumar, recaidas, inicio, QUARTA)).isEqualTo(21);
+    }
+
+    // Força: hábito diário desde 120 dias antes da segunda.
+    private final Rotina diaria = rotina(SEGUNDA.minusDays(120), DiaSemana.values());
+
+    private static Set<LocalDate> todosOsDias(LocalDate de, LocalDate ate) {
+        return de.datesUntil(ate.plusDays(1)).collect(Collectors.toSet());
+    }
+
+    @Test
+    void forcaSemPlanoENula() {
+        assertThat(Consistencia.forca(rotina(SEGUNDA), Set.of(), SEXTA, LIMITE)).isNull();
+    }
+
+    @Test
+    void forcaChegaAMetadeDepoisDeUmaMeiaVidaCumprida() {
+        Rotina nova = rotina(SEGUNDA, DiaSemana.values());
+        LocalDate fim = SEGUNDA.plusDays(Consistencia.MEIA_VIDA_FORCA - 1L);
+
+        assertThat(Consistencia.forca(nova, todosOsDias(SEGUNDA, fim), fim, LIMITE)).isEqualTo(50);
+    }
+
+    @Test
+    void falhaIsoladaDepoisDeMesesCustaPoucoEnquantoASequenciaZera() {
+        Set<LocalDate> feitas = new HashSet<>(todosOsDias(diaria.inicio(), SEXTA));
+        feitas.remove(SEXTA);
+        LocalDate sabado = SEXTA.plusDays(1);
+        feitas.add(sabado);
+
+        assertThat(Consistencia.sequenciaAtual(diaria, feitas, sabado, LIMITE)).isEqualTo(1);
+        assertThat(Consistencia.forca(diaria, feitas, sabado, LIMITE)).isBetween(90, 99);
+    }
+
+    @Test
+    void forcaCaiComFalhasSeguidas() {
+        Set<LocalDate> ateOMesPassado = todosOsDias(diaria.inicio(), SEXTA.minusDays(30));
+
+        assertThat(Consistencia.forca(diaria, ateOMesPassado, SEXTA, LIMITE)).isBetween(15, 25);
+    }
+
+    @Test
+    void forcaNaoPuneAReferenciaAindaNaoFeita() {
+        Set<LocalDate> ateOntem = todosOsDias(diaria.inicio(), SEXTA.minusDays(1));
+
+        assertThat(Consistencia.forca(diaria, ateOntem, SEXTA, LIMITE))
+                .isEqualTo(Consistencia.forca(diaria, ateOntem, SEXTA.minusDays(1), LIMITE));
+    }
+
+    @Test
+    void diasSemPlanoNaoMexemNaForca() {
+        // só segunda; a semana inteira até domingo não muda nada depois da segunda feita
+        Rotina segundas = rotina(SEGUNDA.minusWeeks(10), DiaSemana.SEGUNDA);
+        Set<LocalDate> feitas = todosOsDias(SEGUNDA.minusWeeks(10), SEGUNDA);
+
+        assertThat(Consistencia.forca(segundas, feitas, SEGUNDA.plusDays(6), LIMITE))
+                .isEqualTo(Consistencia.forca(segundas, feitas, SEGUNDA, LIMITE));
     }
 }
