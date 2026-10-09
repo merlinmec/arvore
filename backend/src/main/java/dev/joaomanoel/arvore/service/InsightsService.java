@@ -35,6 +35,8 @@ public class InsightsService {
     public static final int MAX_DIAS_RESUMO = 365;
     public static final int MAX_DIAS_HISTORICO = 400;
     private static final int JANELA_STREAK_DIAS = 180;
+    // Com meia-vida de 13 ocorrências, o que veio antes de um ano pesa menos de 1% mesmo num hábito diário.
+    private static final int JANELA_FORCA_DIAS = 365;
 
     private final CatalogoService catalogoService;
     private final ConclusaoRepository conclusaoRepository;
@@ -83,12 +85,13 @@ public class InsightsService {
         LocalDate inicio = hoje.minusDays(dias - 1L);
         LocalDate inicioAnterior = inicio.minusDays(dias);
         LocalDate limiteStreak = hoje.minusDays(JANELA_STREAK_DIAS);
+        LocalDate limiteForca = hoje.minusDays(JANELA_FORCA_DIAS);
 
         Catalogo catalogo = carregar(areaId);
         List<Atividade> atividades = catalogo.atividadesEmCurso(areaId);
         // Começa numa segunda: a meta semanal olha a semana inteira de cada dia.
         LocalDate inicioBusca =
-                Datas.inicioDaSemana(inicioAnterior.isBefore(limiteStreak) ? inicioAnterior : limiteStreak);
+                Datas.inicioDaSemana(inicioAnterior.isBefore(limiteForca) ? inicioAnterior : limiteForca);
         Map<UUID, Set<LocalDate>> concluidas = concluidasPorAtividade(atividades, inicioBusca, hoje);
 
         Acumulador periodo = new Acumulador();
@@ -146,7 +149,8 @@ public class InsightsService {
                             concluidoAtividade,
                             Consistencia.taxa(planejadoAtividade, concluidoAtividade),
                             Consistencia.sequenciaAtual(rotina, feitas, hoje, limiteStreak),
-                            Consistencia.maiorSequencia(rotina, feitas, inicio, hoje)));
+                            Consistencia.maiorSequencia(rotina, feitas, inicio, hoje),
+                            Consistencia.forca(rotina, feitas, hoje, limiteForca)));
         }
 
         List<SerieDiaDTO> serie = new ArrayList<>();
