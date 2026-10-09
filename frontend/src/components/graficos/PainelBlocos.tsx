@@ -85,11 +85,17 @@ export function TabelaAtividades({ atividades }: { atividades: AtividadeConsiste
 
   return (
     <div className="-mx-5 overflow-x-auto">
-      <table className="w-full min-w-[34rem] text-sm">
+      <table className="w-full min-w-[38rem] text-sm">
         <thead>
           <tr className="border-b border-line text-left text-xs text-ink-faint">
             <th className="px-5 pb-2 font-normal">Atividade</th>
             <th className="w-40 pb-2 font-normal">Consistência</th>
+            <th
+              className="w-16 pb-2 text-right font-normal"
+              title="Força do hábito hoje, de 0 a 100: cada vez cumprida puxa pra cima e cada falha pra baixo, com o passado pesando cada vez menos. Uma falha isolada custa pouco; várias seguidas derrubam."
+            >
+              Força
+            </th>
             <th className="w-16 pb-2 text-right font-normal">Feitas</th>
             <th className="w-20 pb-2 text-right font-normal">Sequência</th>
             <th className="w-20 px-5 pb-2 text-right font-normal">Recorde</th>
@@ -125,6 +131,13 @@ export function TabelaAtividades({ atividades }: { atividades: AtividadeConsiste
                       {atividade.taxa}%
                     </span>
                   </div>
+                </td>
+                <td className="py-2.5 text-right tabular-nums">
+                  {atividade.forca === null ? (
+                    <span className="text-ink-faint">—</span>
+                  ) : (
+                    <span className={atividade.forca >= 50 ? 'text-ink' : 'text-ink-muted'}>{atividade.forca}</span>
+                  )}
                 </td>
                 <td className="py-2.5 text-right tabular-nums text-ink-muted">
                   {atividade.concluido}
