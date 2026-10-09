@@ -13,4 +13,6 @@ public record AtividadeConsistenciaDTO(
         int concluido,
         Integer taxa,
         int streakAtual,
-        int maiorSequencia) {}
+        int maiorSequencia,
+        // força do hábito hoje (0–100, com decaimento), independente do período escolhido
+        Integer forca) {}
