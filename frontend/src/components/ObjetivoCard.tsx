@@ -5,14 +5,13 @@ import { corDaArea } from '../lib/cores'
 import { diferencaEmDias, formatarCurto, hojeIso } from '../lib/datas'
 import { formatarNumero, lerNumero } from '../lib/numeros'
 import {
-  DIAS_SEMANA,
   type Atividade,
-  type DiaSemana,
   type Meta,
   type ObjetivoComAtividades,
   type SituacaoMeta,
   type StatusObjetivo,
 } from '../lib/types'
+import { GradeAtividade } from './GradeAtividade'
 import { IconCalendar, IconPlus, IconTrash } from './icons'
 
 const STATUS: Record<StatusObjetivo, { rotulo: string; estilo: string }> = {
@@ -20,16 +19,6 @@ const STATUS: Record<StatusObjetivo, { rotulo: string; estilo: string }> = {
   CONCLUIDO: { rotulo: 'Concluído', estilo: 'bg-surface-3 text-ink-muted' },
   PAUSADO: { rotulo: 'Pausado', estilo: 'bg-warning-soft text-warning' },
   ARQUIVADO: { rotulo: 'Arquivado', estilo: 'bg-surface-3 text-ink-faint' },
-}
-
-const NOMES_DIA: Record<DiaSemana, string> = {
-  SEGUNDA: 'segunda',
-  TERCA: 'terça',
-  QUARTA: 'quarta',
-  QUINTA: 'quinta',
-  SEXTA: 'sexta',
-  SABADO: 'sábado',
-  DOMINGO: 'domingo',
 }
 
 function Prazo({ prazo }: { prazo: string }) {
@@ -172,88 +161,20 @@ function AtividadeItem({ atividade, areaId, cor }: { atividade: Atividade; areaI
       queryClient.invalidateQueries({ queryKey: ['hoje'] }),
       queryClient.invalidateQueries({ queryKey: ['insights'] }),
       queryClient.invalidateQueries({ queryKey: ['areas'] }),
+      queryClient.invalidateQueries({ queryKey: ['revisoes'] }),
     ])
   }
-
-  const alternarDia = useMutation({
-    mutationFn: (dia: DiaSemana) =>
-      atividade.diasAgendados.includes(dia)
-        ? api.delete(`/atividades/${atividade.id}/agenda/${dia}`)
-        : api.post(`/atividades/${atividade.id}/agenda/${dia}`),
-    onSuccess: invalidar,
-  })
-
-  const definirFrequencia = useMutation({
-    mutationFn: (vezes: number | null) =>
-      vezes === null
-        ? api.delete(`/atividades/${atividade.id}/agenda/frequencia`)
-        : api.put(`/atividades/${atividade.id}/agenda/frequencia`, { vezes }),
-    onSuccess: invalidar,
-  })
 
   const excluirAtividade = useMutation({
     mutationFn: () => api.delete(`/objetivos/${atividade.objetivoId}/atividades/${atividade.id}`),
     onSuccess: invalidar,
   })
 
-  const flexivel = atividade.vezesPorSemana !== null
-
   return (
     <li className="group flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5">
       <p className="min-w-0 flex-1 truncate text-sm text-ink">{atividade.nome}</p>
       <div className="flex items-center gap-1.5">
-        {atividade.negativa ? (
-          <span
-            className="rounded-[5px] bg-surface-3 px-2 py-1 text-[11px] font-medium text-ink-muted"
-            title="Vale todo dia: o dia conta como cumprido se não houver recaída"
-          >
-            Hábito negativo · todo dia
-          </span>
-        ) : (
-          <>
-            <select
-              value={atividade.vezesPorSemana ?? ''}
-              onChange={(evento) =>
-                definirFrequencia.mutate(evento.target.value === '' ? null : Number(evento.target.value))
-              }
-              aria-label={`Frequência de ${atividade.nome}`}
-              title="A mudança vale a partir de hoje, o histórico não muda"
-              className="h-6 cursor-pointer appearance-none rounded-[5px] border-none bg-surface-3 px-2 text-[11px] font-medium text-ink-muted hover:text-ink"
-            >
-              <option value="" className="bg-surface text-ink">
-                Dias fixos
-              </option>
-              {[1, 2, 3, 4, 5, 6, 7].map((vezes) => (
-                <option key={vezes} value={vezes} className="bg-surface text-ink">
-                  {vezes}× por semana
-                </option>
-              ))}
-            </select>
-            {!flexivel && (
-              <div className="flex gap-0.5" role="group" aria-label={`Dias de ${atividade.nome}`}>
-                {DIAS_SEMANA.map(({ valor, label }) => {
-                  const ativo = atividade.diasAgendados.includes(valor)
-                  return (
-                    <button
-                      key={valor}
-                      type="button"
-                      onClick={() => alternarDia.mutate(valor)}
-                      aria-pressed={ativo}
-                      aria-label={`${ativo ? 'Tirar' : 'Colocar'} ${atividade.nome} na ${NOMES_DIA[valor]}`}
-                      title={`${label}: a mudança vale a partir de hoje, o histórico não muda`}
-                      className={`flex h-6 w-6 items-center justify-center rounded-[5px] text-[10px] font-semibold transition-colors duration-150 ${
-                        ativo ? 'text-canvas' : 'bg-surface-3 text-ink-faint hover:text-ink-muted'
-                      }`}
-                      style={ativo ? { backgroundColor: cor } : undefined}
-                    >
-                      {label.slice(0, 1)}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </>
-        )}
+        <GradeAtividade atividade={atividade} cor={cor} />
         <button
           type="button"
           onClick={() => {

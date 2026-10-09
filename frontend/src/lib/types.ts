@@ -175,3 +175,37 @@ export interface ResumoInsights {
   porDiaSemana: DiaSemanaConsistencia[]
   atividades: AtividadeConsistencia[]
 }
+
+export interface AtividadeRevisao {
+  /** Traz a grade atual, pra ajustar a próxima semana ali mesmo. */
+  atividade: Atividade
+  objetivoDescricao: string
+  areaId: string
+  areaNome: string
+  areaCorTema: string | null
+  planejado: number
+  concluido: number
+  /** Dias passados em que algo planejado escapou; hoje ainda pode ser feito e não entra. */
+  diasPerdidos: string[]
+}
+
+/** Retrato de uma semana (segunda a domingo), contado até apuradoAte. */
+export interface RevisaoSemana {
+  semana: string
+  fim: string
+  apuradoAte: string
+  planejado: number
+  concluido: number
+  taxa: number | null
+  taxaSemanaAnterior: number | null
+  dias: DiaConsistencia[]
+  atividades: AtividadeRevisao[]
+  /** Null enquanto a semana não foi revisada. */
+  nota: string | null
+}
+
+export interface Revisao {
+  semana: string
+  nota: string
+  atualizadoEm: string
+}

@@ -9,6 +9,7 @@ import { Hoje } from './pages/Hoje'
 import { Login } from './pages/Login'
 import { NovaArea } from './pages/NovaArea'
 import { Painel } from './pages/Painel'
+import { Revisao } from './pages/Revisao'
 import { TagDetalhe } from './pages/TagDetalhe'
 
 const queryClient = new QueryClient()
@@ -24,6 +25,7 @@ function App() {
               <Route element={<Layout />}>
                 <Route index element={<Hoje />} />
                 <Route path="painel" element={<Painel />} />
+                <Route path="revisao" element={<Revisao />} />
                 <Route path="areas" element={<Areas />} />
                 <Route path="areas/nova" element={<NovaArea />} />
                 <Route path="areas/:id" element={<AreaDetalhe />} />

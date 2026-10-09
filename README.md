@@ -9,6 +9,7 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 - **Hábitos negativos** ("não fumar"): valem todo dia, e você registra só as recaídas
 - **Hoje**: plano do dia agrupado por área, navegação por data com a tira da semana, registro retroativo e sequência (streak) por atividade
 - **Painel**: taxa de conclusão com variação contra o período anterior, série diária por área, consistência por área e por dia da semana, heatmap anual e ranking de atividades com a força de cada hábito (pontuação com decaimento), com filtro de período e de área
+- **Revisão semanal** guiada: como foi a semana, o que escapou, uma nota e o ajuste da grade da próxima
 - **Notas** em Markdown com tags que cruzam áreas
 
 Direção do produto, diretrizes e próximas fases: [`docs/ROADMAP.md`](docs/ROADMAP.md).
@@ -103,6 +104,8 @@ Os testes unitários ficam em `util/`. Os de integração (`integracao/`) sobem 
 | `POST`/`DELETE` | `/api/atividades/{id}/agenda/{DIA}` | Coloca/tira um dia fixo da grade (vale a partir de hoje) |
 | `PUT`/`DELETE` | `/api/atividades/{id}/agenda/frequencia` | Define (`{"vezes": 1-7}`) ou remove a meta de N vezes por semana; troca de modo encerra os dias fixos |
 | `GET` | `/api/areas` | Árvore de áreas com o progresso da semana |
+| `GET` | `/api/revisoes/{data}` | Retrato da semana que contém a data (até hoje): taxa contra a anterior, dias, o que escapou por atividade e a nota |
+| `PUT` | `/api/revisoes/{data}` | Salva a nota da revisão da semana (`{"nota"}`); `GET /api/revisoes` lista as revisões feitas |
 
 ## Frontend (`frontend/`)
 
