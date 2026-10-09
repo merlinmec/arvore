@@ -164,6 +164,7 @@ public class ObjetivoService {
                 atividade.getObjetivoId(),
                 atividade.getNome(),
                 rotina.diasAtuais(),
-                rotina.vezesAtuais());
+                rotina.vezesAtuais(),
+                atividade.isNegativa());
     }
 }

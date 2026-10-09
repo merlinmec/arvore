@@ -1,5 +1,6 @@
 package dev.joaomanoel.arvore.service;
 
+import dev.joaomanoel.arvore.entity.Atividade;
 import dev.joaomanoel.arvore.entity.Conclusao;
 import dev.joaomanoel.arvore.exception.NaoEncontradoException;
 import dev.joaomanoel.arvore.repository.AtividadeRepository;
@@ -27,7 +28,10 @@ public class ConclusaoService {
      * futuros. Com {@code valor} ("5" km), marcar de novo no mesmo dia corrige o valor registrado.
      */
     public void marcar(UUID atividadeId, LocalDate data, BigDecimal valor) {
-        validar(atividadeId, data);
+        Atividade atividade = validar(atividadeId, data);
+        if (valor != null && atividade.isNegativa()) {
+            throw new IllegalArgumentException("Recaída de hábito negativo não registra valor");
+        }
         if (valor != null && valor.signum() < 0) {
             throw new IllegalArgumentException("O valor não pode ser negativo");
         }
@@ -53,12 +57,12 @@ public class ConclusaoService {
                 .ifPresent(conclusaoRepository::delete);
     }
 
-    private void validar(UUID atividadeId, LocalDate data) {
+    private Atividade validar(UUID atividadeId, LocalDate data) {
         if (data.isAfter(Datas.hoje())) {
             throw new IllegalArgumentException("Não dá pra concluir uma atividade num dia que ainda não chegou");
         }
-        if (!atividadeRepository.existsById(atividadeId)) {
-            throw new NaoEncontradoException("Atividade não encontrada");
-        }
+        return atividadeRepository
+                .findById(atividadeId)
+                .orElseThrow(() -> new NaoEncontradoException("Atividade não encontrada"));
     }
 }

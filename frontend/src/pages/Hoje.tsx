@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { IconCheck, IconChevronLeft, IconChevronRight, IconFlame, IconInbox } from '../components/icons'
+import { IconCheck, IconChevronLeft, IconChevronRight, IconFlame, IconInbox, IconX } from '../components/icons'
 import { api } from '../lib/api'
 import { corDaArea } from '../lib/cores'
 import { lerNumero } from '../lib/numeros'
@@ -17,6 +17,11 @@ import {
 } from '../lib/datas'
 import { useDia, useHistorico } from '../lib/queries'
 import type { DiaHoje, ItemHoje } from '../lib/types'
+
+/** Se o item está em dia: feito, ou, num hábito negativo, sem recaída. */
+function cumprido(item: ItemHoje) {
+  return item.negativa ? !item.concluido : item.concluido
+}
 
 interface GrupoArea {
   id: string
@@ -98,6 +103,7 @@ function ItemAtividade({
   aoAlternar: () => void
   aoRegistrarValor: (valor: number) => void
 }) {
+  if (item.negativa) return <ItemHabitoNegativo item={item} editavel={editavel} aoAlternar={aoAlternar} />
   return (
     <li
       className={`animate-rise group flex items-center gap-3.5 px-4 py-3 transition-colors duration-150 ${
@@ -156,6 +162,74 @@ function ItemAtividade({
           title={`${item.streakAtual} ${item.streakAtual === 1 ? 'vez seguida' : 'vezes seguidas'} ${
             item.metaSemanal === null ? 'no dia agendado' : 'sem perder a meta da semana'
           }`}
+        >
+          <IconFlame className="h-3.5 w-3.5" />
+          {item.streakAtual}
+        </span>
+      )}
+    </li>
+  )
+}
+
+/**
+ * Hábito negativo: o dia já começa cumprido, e a ação é registrar a recaída. Por isso o círculo é só
+ * estado, e o botão fica à direita, com o verbo explícito.
+ */
+function ItemHabitoNegativo({
+  item,
+  editavel,
+  aoAlternar,
+}: {
+  item: ItemHoje
+  editavel: boolean
+  aoAlternar: () => void
+}) {
+  const recaiu = item.concluido
+  return (
+    <li className="animate-rise flex items-center gap-3.5 px-4 py-3">
+      <span
+        aria-hidden
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] ${
+          recaiu
+            ? 'border-danger bg-danger-soft text-danger'
+            : editavel
+              ? 'border-accent bg-accent-soft text-accent-strong'
+              : 'border-dashed border-line-strong text-transparent'
+        }`}
+      >
+        {recaiu ? (
+          <IconX className="h-3.5 w-3.5" strokeWidth={2.5} />
+        ) : (
+          editavel && <IconCheck className="h-3.5 w-3.5" strokeWidth={2.5} />
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-ink">{item.atividadeNome}</p>
+        <p className="mt-0.5 truncate text-xs text-ink-faint">
+          {item.objetivoDescricao}
+          {' · '}
+          {recaiu ? <span className="text-danger">recaída registrada</span> : 'hábito negativo'}
+        </p>
+      </div>
+      {editavel && (
+        <button
+          type="button"
+          onClick={aoAlternar}
+          aria-pressed={recaiu}
+          aria-label={`${recaiu ? 'Desfazer recaída em' : 'Registrar recaída em'} ${item.atividadeNome}`}
+          className={`shrink-0 rounded-md border px-2 py-1 text-xs transition-colors duration-150 active:scale-95 ${
+            recaiu
+              ? 'border-line text-ink-muted hover:border-line-strong hover:text-ink'
+              : 'border-line text-ink-faint hover:border-danger hover:text-danger'
+          }`}
+        >
+          {recaiu ? 'Desfazer' : 'Recaí'}
+        </button>
+      )}
+      {item.streakAtual > 0 && (
+        <span
+          className="flex shrink-0 items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium tabular-nums text-warning"
+          title={`${item.streakAtual} ${item.streakAtual === 1 ? 'dia' : 'dias seguidos'} sem recaída`}
         >
           <IconFlame className="h-3.5 w-3.5" />
           {item.streakAtual}
@@ -232,6 +306,8 @@ export function Hoje() {
               ? {
                   ...i,
                   concluido: !i.concluido,
+                  // recaída zera a sequência na hora; desfazer espera o servidor recalcular
+                  streakAtual: i.negativa && !i.concluido ? 0 : i.streakAtual,
                   feitasNaSemana: i.feitasNaSemana === null ? null : i.feitasNaSemana + (i.concluido ? -1 : 1),
                 }
               : i,
@@ -287,7 +363,7 @@ export function Hoje() {
   }
 
   const itens = useMemo(() => dia?.itens ?? [], [dia])
-  const concluidas = itens.filter((item) => item.concluido).length
+  const concluidas = itens.filter(cumprido).length
   const percentual = itens.length > 0 ? Math.round((concluidas / itens.length) * 100) : 0
 
   const grupos = useMemo(() => {
@@ -377,7 +453,7 @@ export function Hoje() {
           )}
 
           {gruposVisiveis.map((grupo) => {
-            const feitas = grupo.itens.filter((item) => item.concluido).length
+            const feitas = grupo.itens.filter(cumprido).length
             return (
               <section key={grupo.id}>
                 <div className="mb-2 flex items-center gap-2 px-1">

@@ -6,10 +6,12 @@ import dev.joaomanoel.arvore.entity.Atividade;
 import dev.joaomanoel.arvore.entity.FrequenciaSemanal;
 import dev.joaomanoel.arvore.entity.Objetivo;
 import dev.joaomanoel.arvore.entity.StatusObjetivo;
+import dev.joaomanoel.arvore.util.Consistencia.Abstencao;
 import dev.joaomanoel.arvore.util.Consistencia.Cota;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
 import dev.joaomanoel.arvore.util.Consistencia.Vigencia;
 import dev.joaomanoel.arvore.util.Datas;
+import java.time.LocalDate;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -79,6 +81,8 @@ public class Catalogo {
                                                                 frequencia.getVigenteDe(),
                                                                 frequencia.getVigenteAte()),
                                                 Collectors.toList())));
+        // Hábito negativo é apurado até hoje: o catálogo é montado a cada requisição.
+        LocalDate hoje = Datas.hoje();
         this.rotinas =
                 atividades.stream()
                         .collect(
@@ -91,7 +95,10 @@ public class Catalogo {
                                                         gradePorAtividade.getOrDefault(
                                                                 atividade.getId(), List.of()),
                                                         cotasPorAtividade.getOrDefault(
-                                                                atividade.getId(), List.of()))));
+                                                                atividade.getId(), List.of()),
+                                                        atividade.isNegativa()
+                                                                ? new Abstencao(hoje)
+                                                                : null)));
     }
 
     private static <T> Map<UUID, T> indexar(Collection<T> itens, Function<T, UUID> id) {

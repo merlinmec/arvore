@@ -1,6 +1,7 @@
 package dev.joaomanoel.arvore.service;
 
 import dev.joaomanoel.arvore.entity.AgendaSemanal;
+import dev.joaomanoel.arvore.entity.Atividade;
 import dev.joaomanoel.arvore.entity.DiaSemana;
 import dev.joaomanoel.arvore.entity.FrequenciaSemanal;
 import dev.joaomanoel.arvore.exception.NaoEncontradoException;
@@ -139,9 +140,14 @@ public class AgendaSemanalService {
                         });
     }
 
+    /** A atividade existe e aceita grade: hábito negativo vale todo dia, então não tem. */
     private void garantirAtividade(UUID atividadeId) {
-        if (!atividadeRepository.existsById(atividadeId)) {
-            throw new NaoEncontradoException("Atividade não encontrada");
+        Atividade atividade =
+                atividadeRepository
+                        .findById(atividadeId)
+                        .orElseThrow(() -> new NaoEncontradoException("Atividade não encontrada"));
+        if (atividade.isNegativa()) {
+            throw new IllegalArgumentException("Hábito negativo vale todo dia e não tem grade");
         }
     }
 }
