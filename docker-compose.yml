@@ -1,0 +1,40 @@
+# Sobe o app inteiro: docker compose up --build
+# Antes, copie .env.example para .env e preencha a senha e o segredo do JWT.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: arvore
+      POSTGRES_USER: arvore
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arvore}
+    volumes:
+      - dados-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arvore -d arvore"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/arvore
+      DATABASE_USERNAME: arvore
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-arvore}
+      ARVORE_USUARIO: ${ARVORE_USUARIO:-joao}
+      ARVORE_SENHA_HASH: ${ARVORE_SENHA_HASH:?defina ARVORE_SENHA_HASH no .env}
+      ARVORE_JWT_SEGREDO: ${ARVORE_JWT_SEGREDO:?defina ARVORE_JWT_SEGREDO no .env}
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "${PORTA:-8000}:80"
+
+volumes:
+  dados-postgres:
