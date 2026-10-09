@@ -24,6 +24,10 @@ public class Atividade {
     @Column(nullable = false, length = 150)
     private String nome;
 
+    /** Hábito negativo ("não fumar"): vale todo dia, e cada conclusão registrada é uma recaída. */
+    @Column(nullable = false, updatable = false)
+    private boolean negativa;
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 

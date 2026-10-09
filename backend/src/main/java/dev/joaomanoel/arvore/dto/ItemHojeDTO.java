@@ -11,7 +11,9 @@ public record ItemHojeDTO(
         UUID areaId,
         String areaNome,
         String areaCorTema,
+        // Há registro nesse dia. Num hábito negativo o registro é a recaída, então cumprido é o contrário.
         boolean concluido,
+        boolean negativa,
         int streakAtual,
         // Só nas atividades com meta semanal: a meta e quantas vezes já foram feitas na semana até o dia.
         Integer metaSemanal,

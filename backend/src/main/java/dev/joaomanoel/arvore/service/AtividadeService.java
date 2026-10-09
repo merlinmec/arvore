@@ -33,6 +33,7 @@ public class AtividadeService {
         Atividade atividade = new Atividade();
         atividade.setObjetivoId(objetivoId);
         atividade.setNome(requisicao.nome());
+        atividade.setNegativa(Boolean.TRUE.equals(requisicao.negativa()));
 
         Atividade salva = atividadeRepository.save(atividade);
         return paraDTO(salva);
@@ -40,6 +41,11 @@ public class AtividadeService {
 
     private AtividadeDTO paraDTO(Atividade atividade) {
         return new AtividadeDTO(
-                atividade.getId(), atividade.getObjetivoId(), atividade.getNome(), List.of(), null);
+                atividade.getId(),
+                atividade.getObjetivoId(),
+                atividade.getNome(),
+                List.of(),
+                null,
+                atividade.isNegativa());
     }
 }
