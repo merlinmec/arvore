@@ -62,7 +62,7 @@ Valem para qualquer feature nova, no backend ou no frontend.
 - [x] `Catalogo`: retrato da árvore em 4 queries, eliminando o N+1 de Hoje
 - [x] Erros HTTP padronizados (`TratadorDeErros`: 404 pra não encontrado, 400 pra entrada inválida)
 
-### Fase 2 — Metas mensuráveis
+### Fase 2 — Metas mensuráveis ✅ (09/10/2026)
 
 Inspiração: Loop Habit Tracker, Streaks, "Goal-Tab".
 
@@ -70,7 +70,7 @@ Inspiração: Loop Habit Tracker, Streaks, "Goal-Tab".
 - [x] **Frequência flexível** (29/09/2026): além de dias fixos, "N vezes por semana" em qualquer dia (`frequencia_semanal`, com vigência). Cada dia feito conta 1 de 1 até a meta, e a falha cai no dia em que deixou de dar tempo de cumprir a semana, então heatmap, taxa e streak continuam somando por dia
 - [x] **Meta quantitativa no objetivo** (30/09/2026): ex. "correr 100 km até dezembro". A conclusão registra um valor opcional (5 km), e o card mostra o acumulado contra a meta, onde estaria num ritmo constante, a situação (adiantada, no ritmo, atrasada) e quanto falta por semana até o prazo
 - [x] **Hábito negativo** (09/10/2026): "não fumar", criado com `negativa: true`. Vale todo dia desde a criação, sem grade, e o registro é a recaída. Dia sem recaída até hoje conta como cumprido (hoje vale enquanto não houver recaída), dia futuro fica planejado e não cumprido, e a sequência é de dias limpos
-- [ ] **Pontuação com decaimento** (estilo Loop): uma falha isolada depois de meses de consistência pesa menos que um streak zerado
+- [x] **Força do hábito** (09/10/2026), pontuação com decaimento estilo Loop: média móvel exponencial (0–100) das ocorrências planejadas, com meia-vida de 13 ocorrências. Uma falha isolada depois de meses de consistência custa uns 5 pontos, enquanto a sequência zera. Aparece no ranking de atividades do Painel
 
 ### Fase 3 — Rituais
 
