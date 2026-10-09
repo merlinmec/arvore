@@ -20,6 +20,19 @@ arvore/
 └── frontend/   # SPA React + TypeScript (Vite, Tailwind, React Query)
 ```
 
+## Rodar com Docker (um comando)
+
+Precisa só do Docker. Copie o `.env.example` para `.env`, preencha o hash bcrypt da senha e o segredo do JWT (entre aspas simples), e suba:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+O app abre em `http://localhost:8000` (mude com `PORTA` no `.env`). O nginx do frontend repassa `/api` pro backend, e os dados do Postgres ficam no volume `dados-postgres`.
+
+Para desenvolver com hot reload, siga as seções abaixo.
+
 ## Pré-requisitos
 
 - [Java 17](https://adoptium.net/) (JDK)
@@ -72,8 +85,10 @@ A API sobe em `http://localhost:8080`.
 ### Testes
 
 ```bash
-./mvnw test
+./mvnw verify
 ```
+
+Os testes unitários ficam em `util/`. Os de integração (`integracao/`) sobem um Postgres real com [Testcontainers](https://testcontainers.com/), então precisam do Docker rodando. O GitHub Actions (`.github/workflows/ci.yml`) roda tudo a cada push e PR.
 
 ### Principais endpoints
 

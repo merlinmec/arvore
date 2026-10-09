@@ -1,6 +1,6 @@
 # Roadmap do Árvore
 
-Documento vivo com a direção do produto: em que apps parecidos se inspira, as diretrizes que valem pra qualquer feature nova, as metas e as fases de evolução. Atualizado em 28/09/2026.
+Documento vivo com a direção do produto: em que apps parecidos se inspira, as diretrizes que valem pra qualquer feature nova, as metas e as fases de evolução. Atualizado em 09/10/2026.
 
 ---
 
@@ -83,8 +83,8 @@ Inspiração: Sunsama, Clockify, Habi.
 
 ### Fase 4 — Plataforma e qualidade
 
-- [ ] Testes de integração com Testcontainers + GitHub Actions rodando back e front
-- [ ] `docker-compose.yml` com Postgres, backend e frontend
+- [x] **Testes de integração e CI** (09/10/2026): Testcontainers com Postgres real, passando pelo login JWT (autenticação e fluxo da tela Hoje); GitHub Actions roda os testes do backend, lint e build do frontend e o build das imagens. Faltam testes de Painel, Áreas e agenda
+- [x] **`docker-compose.yml`** (09/10/2026) com Postgres, backend e frontend (nginx servindo o build e repassando `/api`)
 - [ ] PWA instalável e com cache offline da tela Hoje
 - [ ] Atalhos de teclado e command palette (`Ctrl+K`: ir pra área, marcar atividade)
 - [ ] Exportar CSV das conclusões e backup/restauração em JSON
