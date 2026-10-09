@@ -15,7 +15,7 @@ import {
   rotuloRelativo,
   somarDias,
 } from '../lib/datas'
-import { useDia, useHistorico } from '../lib/queries'
+import { useDia, useHistorico, useRevisao } from '../lib/queries'
 import type { DiaHoje, ItemHoje } from '../lib/types'
 
 /** Se o item está em dia: feito, ou, num hábito negativo, sem recaída. */
@@ -284,6 +284,9 @@ export function Hoje() {
   const data = parametros.get('data') ?? hojeLocal
   const { data: dia, isLoading, isError } = useDia(data)
   const hoje = dia?.hoje ?? hojeLocal
+  // domingo é dia de revisão: convida enquanto a semana não foi revisada
+  const domingo = data === hoje && paraData(hoje).getDay() === 0
+  const { data: revisao } = useRevisao(hoje, domingo)
 
   function irPara(iso: string) {
     setParametros(iso === hoje ? {} : { data: iso }, { replace: true })
@@ -425,6 +428,19 @@ export function Hoje() {
 
       <div className="grid gap-8 lg:grid-cols-[1fr_17rem]">
         <div className="min-w-0 space-y-6">
+          {domingo && revisao?.nota === null && (
+            <Link
+              to="/revisao"
+              className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-sm transition-colors hover:border-line-strong"
+            >
+              <span>
+                <span className="text-ink">Domingo, hora da revisão.</span>{' '}
+                <span className="text-ink-muted">Veja o que escapou na semana e ajuste a próxima.</span>
+              </span>
+              <IconChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
+            </Link>
+          )}
+
           {!editavel && itens.length > 0 && (
             <p className="rounded-lg border border-dashed border-line px-4 py-2.5 text-sm text-ink-muted">
               Esse dia ainda não chegou. Dá pra ver o que está planejado, mas só marcar quando ele vier.

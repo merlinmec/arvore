@@ -76,7 +76,7 @@ Inspiração: Loop Habit Tracker, Streaks, "Goal-Tab".
 
 Inspiração: Sunsama, Clockify, Habi.
 
-- [ ] **Revisão semanal guiada:** domingo, o app mostra a semana (o que foi cumprido, o que escapou), pede uma nota curta e ajusta a grade da próxima semana
+- [x] **Revisão semanal guiada** (09/10/2026): tela Revisão em 4 passos — como foi a semana (taxa contra a anterior e os dias), o que escapou (dias perdidos por atividade, recaídas à parte), uma nota guardada por semana e o ajuste da grade. Domingo, a tela Hoje convida pra revisar enquanto a semana não tem nota. O ajuste da grade vale a partir de hoje, como qualquer mudança de grade (vigência futura ficou de fora)
 - [ ] **Diário do dia:** nota por data com humor/energia (1–5), cruzável com a consistência no Painel
 - [ ] **Temporizador de foco** por atividade, registrando minutos (dashboard de tempo por área, estilo Clockify)
 - [ ] **Lembretes** por atividade (notificação do navegador/PWA)

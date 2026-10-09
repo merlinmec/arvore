@@ -158,7 +158,8 @@ public class ObjetivoService {
                 objetivo.getMetaUnidade());
     }
 
-    private AtividadeDTO paraDTO(Atividade atividade, Rotina rotina) {
+    /** Usado também pela revisão semanal, que mostra a grade atual de cada atividade. */
+    static AtividadeDTO paraDTO(Atividade atividade, Rotina rotina) {
         return new AtividadeDTO(
                 atividade.getId(),
                 atividade.getObjetivoId(),

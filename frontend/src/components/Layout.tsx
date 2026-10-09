@@ -1,11 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAreas } from '../lib/queries'
 import { useAuth } from '../lib/useAuth'
-import { IconBranches, IconChart, IconLogOut, IconSun, IconTree } from './icons'
+import { IconBranches, IconCalendar, IconChart, IconLogOut, IconSun, IconTree } from './icons'
 
 const NAVEGACAO = [
   { para: '/', rotulo: 'Hoje', Icone: IconSun, fim: true },
   { para: '/painel', rotulo: 'Painel', Icone: IconChart, fim: false },
+  { para: '/revisao', rotulo: 'Revisão', Icone: IconCalendar, fim: false },
   { para: '/areas', rotulo: 'Áreas', Icone: IconBranches, fim: true },
 ]
 
