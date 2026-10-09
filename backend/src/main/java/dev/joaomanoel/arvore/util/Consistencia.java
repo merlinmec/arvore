@@ -247,6 +247,39 @@ public final class Consistencia {
         return maior;
     }
 
+    /** Ocorrências planejadas pra força cair à metade (ou subir metade do que falta até 100). */
+    static final int MEIA_VIDA_FORCA = 13;
+
+    private static final double RETENCAO_FORCA = Math.pow(0.5, 1.0 / MEIA_VIDA_FORCA);
+
+    /**
+     * Força do hábito em {@code referencia}, de 0 a 100 (estilo Loop Habit Tracker): média móvel
+     * exponencial das ocorrências planejadas desde {@code limite}. Cada ocorrência cumprida puxa pra
+     * 100 e cada falha puxa pra 0, com peso que decai pela metade a cada {@link #MEIA_VIDA_FORCA}
+     * ocorrências. Assim uma falha isolada depois de meses de consistência custa pouco, ao contrário
+     * da sequência, que zera. Dia sem plano não mexe na força, e a referência só entra se já foi
+     * cumprida (como na sequência). Null quando nada foi planejado.
+     */
+    public static Integer forca(
+            Rotina rotina, Set<LocalDate> concluidas, LocalDate referencia, LocalDate limite) {
+        LocalDate fim = dia(rotina, concluidas, referencia).cumprido() ? referencia : referencia.minusDays(1);
+        LocalDate inicio = limite.isAfter(rotina.inicio()) ? limite : rotina.inicio();
+
+        double forca = 0;
+        boolean houvePlano = false;
+        for (LocalDate data = inicio; !data.isAfter(fim); data = data.plusDays(1)) {
+            Dia dia = dia(rotina, concluidas, data);
+            // falhas antes dos acertos: dentro do mesmo dia a ordem é arbitrária, e assim o dia
+            // termina no que foi feito
+            for (int i = 0; i < dia.planejado(); i++) {
+                double valor = i >= dia.planejado() - dia.concluido() ? 1 : 0;
+                forca = forca * RETENCAO_FORCA + valor * (1 - RETENCAO_FORCA);
+                houvePlano = true;
+            }
+        }
+        return houvePlano ? (int) Math.round(forca * 100) : null;
+    }
+
     /**
      * Planejado x concluído das rotinas dentro de [inicio, fim]. Só conta como concluído o que
      * estava no plano, então o percentual nunca passa de 100%.

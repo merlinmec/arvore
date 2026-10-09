@@ -53,6 +53,19 @@ class FluxoHojeIntegracaoTest extends IntegracaoTest {
     }
 
     @Test
+    void painelMostraAForcaDoHabito() throws Exception {
+        mvc.perform(autenticado(get("/api/insights/resumo").param("dias", "7")))
+                .andExpect(jsonPath("$.atividades[0].forca").doesNotExist());
+
+        mvc.perform(autenticado(post("/api/atividades/" + atividadeId + "/conclusao")))
+                .andExpect(status().isCreated());
+
+        // uma ocorrência cumprida, partindo de zero: 1 - 0,5^(1/13) ≈ 5%
+        mvc.perform(autenticado(get("/api/insights/resumo").param("dias", "7")))
+                .andExpect(jsonPath("$.atividades[0].forca").value(5));
+    }
+
+    @Test
     void desmarcarConclusaoVoltaAoEstadoAnterior() throws Exception {
         mvc.perform(autenticado(post("/api/atividades/" + atividadeId + "/conclusao")))
                 .andExpect(status().isCreated());
