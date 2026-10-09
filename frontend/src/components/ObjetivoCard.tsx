@@ -202,46 +202,57 @@ function AtividadeItem({ atividade, areaId, cor }: { atividade: Atividade; areaI
     <li className="group flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5">
       <p className="min-w-0 flex-1 truncate text-sm text-ink">{atividade.nome}</p>
       <div className="flex items-center gap-1.5">
-        <select
-          value={atividade.vezesPorSemana ?? ''}
-          onChange={(evento) =>
-            definirFrequencia.mutate(evento.target.value === '' ? null : Number(evento.target.value))
-          }
-          aria-label={`Frequência de ${atividade.nome}`}
-          title="A mudança vale a partir de hoje, o histórico não muda"
-          className="h-6 cursor-pointer appearance-none rounded-[5px] border-none bg-surface-3 px-2 text-[11px] font-medium text-ink-muted hover:text-ink"
-        >
-          <option value="" className="bg-surface text-ink">
-            Dias fixos
-          </option>
-          {[1, 2, 3, 4, 5, 6, 7].map((vezes) => (
-            <option key={vezes} value={vezes} className="bg-surface text-ink">
-              {vezes}× por semana
-            </option>
-          ))}
-        </select>
-        {!flexivel && (
-          <div className="flex gap-0.5" role="group" aria-label={`Dias de ${atividade.nome}`}>
-            {DIAS_SEMANA.map(({ valor, label }) => {
-              const ativo = atividade.diasAgendados.includes(valor)
-              return (
-                <button
-                  key={valor}
-                  type="button"
-                  onClick={() => alternarDia.mutate(valor)}
-                  aria-pressed={ativo}
-                  aria-label={`${ativo ? 'Tirar' : 'Colocar'} ${atividade.nome} na ${NOMES_DIA[valor]}`}
-                  title={`${label}: a mudança vale a partir de hoje, o histórico não muda`}
-                  className={`flex h-6 w-6 items-center justify-center rounded-[5px] text-[10px] font-semibold transition-colors duration-150 ${
-                    ativo ? 'text-canvas' : 'bg-surface-3 text-ink-faint hover:text-ink-muted'
-                  }`}
-                  style={ativo ? { backgroundColor: cor } : undefined}
-                >
-                  {label.slice(0, 1)}
-                </button>
-              )
-            })}
-          </div>
+        {atividade.negativa ? (
+          <span
+            className="rounded-[5px] bg-surface-3 px-2 py-1 text-[11px] font-medium text-ink-muted"
+            title="Vale todo dia: o dia conta como cumprido se não houver recaída"
+          >
+            Hábito negativo · todo dia
+          </span>
+        ) : (
+          <>
+            <select
+              value={atividade.vezesPorSemana ?? ''}
+              onChange={(evento) =>
+                definirFrequencia.mutate(evento.target.value === '' ? null : Number(evento.target.value))
+              }
+              aria-label={`Frequência de ${atividade.nome}`}
+              title="A mudança vale a partir de hoje, o histórico não muda"
+              className="h-6 cursor-pointer appearance-none rounded-[5px] border-none bg-surface-3 px-2 text-[11px] font-medium text-ink-muted hover:text-ink"
+            >
+              <option value="" className="bg-surface text-ink">
+                Dias fixos
+              </option>
+              {[1, 2, 3, 4, 5, 6, 7].map((vezes) => (
+                <option key={vezes} value={vezes} className="bg-surface text-ink">
+                  {vezes}× por semana
+                </option>
+              ))}
+            </select>
+            {!flexivel && (
+              <div className="flex gap-0.5" role="group" aria-label={`Dias de ${atividade.nome}`}>
+                {DIAS_SEMANA.map(({ valor, label }) => {
+                  const ativo = atividade.diasAgendados.includes(valor)
+                  return (
+                    <button
+                      key={valor}
+                      type="button"
+                      onClick={() => alternarDia.mutate(valor)}
+                      aria-pressed={ativo}
+                      aria-label={`${ativo ? 'Tirar' : 'Colocar'} ${atividade.nome} na ${NOMES_DIA[valor]}`}
+                      title={`${label}: a mudança vale a partir de hoje, o histórico não muda`}
+                      className={`flex h-6 w-6 items-center justify-center rounded-[5px] text-[10px] font-semibold transition-colors duration-150 ${
+                        ativo ? 'text-canvas' : 'bg-surface-3 text-ink-faint hover:text-ink-muted'
+                      }`}
+                      style={ativo ? { backgroundColor: cor } : undefined}
+                    >
+                      {label.slice(0, 1)}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </>
         )}
         <button
           type="button"
@@ -262,6 +273,7 @@ function AtividadeItem({ atividade, areaId, cor }: { atividade: Atividade; areaI
 
 export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtividades; corArea?: string | null }) {
   const [nomeAtividade, setNomeAtividade] = useState('')
+  const [negativa, setNegativa] = useState(false)
   const [editandoMeta, setEditandoMeta] = useState(false)
   const queryClient = useQueryClient()
   const cor = corDaArea(corArea)
@@ -269,10 +281,17 @@ export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtivi
   const { progresso } = objetivo
 
   const criarAtividade = useMutation({
-    mutationFn: () => api.post(`/objetivos/${objetivo.id}/atividades`, { nome: nomeAtividade }),
+    mutationFn: () => api.post(`/objetivos/${objetivo.id}/atividades`, { nome: nomeAtividade, negativa }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['objetivos', objetivo.areaId] })
+      // hábito negativo já entra no plano de hoje, sem precisar de grade
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['objetivos', objetivo.areaId] }),
+        queryClient.invalidateQueries({ queryKey: ['hoje'] }),
+        queryClient.invalidateQueries({ queryKey: ['insights'] }),
+        queryClient.invalidateQueries({ queryKey: ['areas'] }),
+      ])
       setNomeAtividade('')
+      setNegativa(false)
     },
   })
 
@@ -409,10 +428,23 @@ export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtivi
         <input
           value={nomeAtividade}
           onChange={(evento) => setNomeAtividade(evento.target.value)}
-          placeholder="Nova atividade, ex: correr 5 km"
+          placeholder={negativa ? 'Hábito a evitar, ex: não fumar' : 'Nova atividade, ex: correr 5 km'}
           aria-label="Nome da nova atividade"
           className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm text-ink placeholder:text-ink-faint hover:border-line focus:border-accent"
         />
+        <button
+          type="button"
+          onClick={() => setNegativa((atual) => !atual)}
+          aria-pressed={negativa}
+          title="Hábito negativo: vale todo dia, e você registra só as recaídas"
+          className={`shrink-0 rounded-md border px-2 text-xs transition-colors ${
+            negativa
+              ? 'border-line-strong bg-surface-3 text-ink'
+              : 'border-line text-ink-faint hover:border-line-strong hover:text-ink-muted'
+          }`}
+        >
+          Evitar
+        </button>
         <button
           type="submit"
           disabled={criarAtividade.isPending || !nomeAtividade.trim()}
