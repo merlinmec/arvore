@@ -114,6 +114,7 @@ public class HojeService {
                 area.getNome(),
                 area.getCorTema(),
                 concluidas.contains(data),
+                atividade.isNegativa(),
                 Consistencia.sequenciaAtual(rotina, concluidas, data, inicioJanela),
                 semana == null ? null : semana.meta(),
                 semana == null ? null : semana.feitas(),

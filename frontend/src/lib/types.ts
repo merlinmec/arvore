@@ -43,6 +43,8 @@ export interface Atividade {
   diasAgendados: DiaSemana[]
   /** Preenchido quando a atividade segue uma meta semanal em vez de dias fixos. */
   vezesPorSemana: number | null
+  /** Hábito negativo ("não fumar"): vale todo dia, sem grade, e o registro é a recaída. */
+  negativa: boolean
 }
 
 export type SituacaoMeta = 'CONCLUIDA' | 'ADIANTADA' | 'NO_RITMO' | 'ATRASADA' | 'VENCIDA' | 'SEM_PRAZO'
@@ -98,7 +100,9 @@ export interface ItemHoje {
   areaId: string
   areaNome: string
   areaCorTema: string | null
+  /** Há registro nesse dia. Num hábito negativo o registro é a recaída: use cumprido(). */
   concluido: boolean
+  negativa: boolean
   streakAtual: number
   /** Só nas atividades com meta semanal: a meta e quantas vezes já foram feitas na semana até o dia. */
   metaSemanal: number | null

@@ -6,6 +6,7 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 
 - **Áreas em árvore** (ex.: Saúde → Corrida), cada uma com cor, descrição e wallpaper
 - **Objetivos** com prazo e status, e **atividades** encaixadas numa grade semanal
+- **Hábitos negativos** ("não fumar"): valem todo dia, e você registra só as recaídas
 - **Hoje**: plano do dia agrupado por área, navegação por data com a tira da semana, registro retroativo e sequência (streak) por atividade
 - **Painel**: taxa de conclusão com variação contra o período anterior, série diária por área, consistência por área e por dia da semana, heatmap anual e ranking de atividades, com filtro de período e de área
 - **Notas** em Markdown com tags que cruzam áreas
@@ -98,6 +99,7 @@ Os testes unitários ficam em `util/`. Os de integração (`integracao/`) sobem 
 | `POST`/`DELETE` | `/api/atividades/{id}/conclusao?data=&valor=` | Marca/desmarca a conclusão (aceita dias passados, recusa futuros); `valor` opcional soma na meta quantitativa do objetivo, e marcar de novo com valor corrige o do dia |
 | `GET` | `/api/insights/resumo?dias=30&areaId=` | Consistência do período (1–365 dias), opcionalmente filtrada por área e subáreas |
 | `GET` | `/api/insights/historico?inicio=&fim=&areaId=` | Planejado x concluído por dia (padrão: últimas 53 semanas) |
+| `POST` | `/api/objetivos/{id}/atividades` | Cria atividade (`{"nome", "negativa"}`); `negativa: true` cria um hábito negativo, que vale todo dia e cujo registro de conclusão é a recaída |
 | `POST`/`DELETE` | `/api/atividades/{id}/agenda/{DIA}` | Coloca/tira um dia fixo da grade (vale a partir de hoje) |
 | `PUT`/`DELETE` | `/api/atividades/{id}/agenda/frequencia` | Define (`{"vezes": 1-7}`) ou remove a meta de N vezes por semana; troca de modo encerra os dias fixos |
 | `GET` | `/api/areas` | Árvore de áreas com o progresso da semana |

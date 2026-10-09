@@ -20,6 +20,10 @@ import java.util.UUID;
  * <p>Uma atividade segue dias fixos ({@link Vigencia}) ou uma meta de N vezes por semana ({@link
  * Cota}). Tudo é contado dia a dia por {@link #dia}, pra heatmap, taxa, streak e progresso somarem
  * do mesmo jeito nos dois casos.
+ *
+ * <p>Hábito negativo ({@link Abstencao}) inverte o registro: vale todo dia, e a data registrada é
+ * uma recaída. Nas funções abaixo, {@code concluidas} são as datas com registro, que pra ele são as
+ * recaídas.
  */
 public final class Consistencia {
 
@@ -45,21 +49,43 @@ public final class Consistencia {
         return !data.isBefore(de) && (ate == null || data.isBefore(ate));
     }
 
-    /** Uma atividade vista como rotina: desde quando existe e o histórico da sua grade. */
-    public record Rotina(UUID atividadeId, LocalDate inicio, List<Vigencia> grade, List<Cota> cotas) {
+    /**
+     * Hábito negativo, apurado até {@code hoje}: dia sem recaída até hoje conta como cumprido (hoje
+     * vale enquanto não houver recaída); dia que ainda não chegou fica planejado e não cumprido, como
+     * um dia agendado de um hábito comum.
+     */
+    public record Abstencao(LocalDate hoje) {}
+
+    /**
+     * Uma atividade vista como rotina: desde quando existe e o histórico da sua grade. {@code
+     * abstencao} só existe em hábito negativo, que ignora grade e cotas.
+     */
+    public record Rotina(
+            UUID atividadeId, LocalDate inicio, List<Vigencia> grade, List<Cota> cotas, Abstencao abstencao) {
 
         public Rotina(UUID atividadeId, LocalDate inicio, List<Vigencia> grade) {
             this(atividadeId, inicio, grade, List.of());
         }
 
-        /** Se {@code data} é um dos dias fixos da grade. */
+        public Rotina(UUID atividadeId, LocalDate inicio, List<Vigencia> grade, List<Cota> cotas) {
+            this(atividadeId, inicio, grade, cotas, null);
+        }
+
+        public boolean negativa() {
+            return abstencao != null;
+        }
+
+        /** Se {@code data} é um dia de plano fixo: da grade, ou qualquer dia num hábito negativo. */
         public boolean planejadaEm(LocalDate data) {
-            return !data.isBefore(inicio) && grade.stream().anyMatch(vigencia -> vigencia.cobre(data));
+            if (data.isBefore(inicio)) {
+                return false;
+            }
+            return negativa() || grade.stream().anyMatch(vigencia -> vigencia.cobre(data));
         }
 
         /** A meta semanal que vale em {@code data}, se a atividade estava no modo "N vezes por semana". */
         public Cota cotaEm(LocalDate data) {
-            if (data.isBefore(inicio)) {
+            if (negativa() || data.isBefore(inicio)) {
                 return null;
             }
             return cotas.stream().filter(cota -> cota.cobre(data)).findFirst().orElse(null);
@@ -105,8 +131,17 @@ public final class Consistencia {
      * a meta da semana), e cada vez que falta vira falha no dia em que deixou de dar tempo. Com 3x
      * por semana e nada feito, as falhas caem na sexta, no sábado e no domingo. Somando a semana
      * inteira, o planejado é a meta; e nenhum dia vira falha enquanto ainda dá pra cumprir.
+     *
+     * <p>Hábito negativo: planejado 1 todo dia, cumprido se não houve recaída e o dia já chegou.
      */
     public static Dia dia(Rotina rotina, Set<LocalDate> concluidas, LocalDate data) {
+        if (rotina.negativa()) {
+            if (data.isBefore(rotina.inicio())) {
+                return Dia.LIVRE;
+            }
+            boolean limpo = !concluidas.contains(data) && !data.isAfter(rotina.abstencao().hoje());
+            return new Dia(1, limpo ? 1 : 0);
+        }
         if (rotina.planejadaEm(data)) {
             return new Dia(1, concluidas.contains(data) ? 1 : 0);
         }
@@ -175,11 +210,13 @@ public final class Consistencia {
     /**
      * Sequência atual até {@code referencia}: vezes cumpridas em seguida. Se a referência ainda não
      * foi concluída, a contagem começa no dia anterior (o dia ainda pode ser feito). Dias sem plano
-     * são pulados sem quebrar a sequência.
+     * são pulados sem quebrar a sequência. Num hábito negativo é a quantidade de dias limpos seguidos,
+     * contando a própria referência.
      */
     public static int sequenciaAtual(
             Rotina rotina, Set<LocalDate> concluidas, LocalDate referencia, LocalDate limite) {
-        LocalDate data = concluidas.contains(referencia) ? referencia : referencia.minusDays(1);
+        LocalDate data =
+                rotina.negativa() || concluidas.contains(referencia) ? referencia : referencia.minusDays(1);
         LocalDate piso = limite.isAfter(rotina.inicio()) ? limite : rotina.inicio();
 
         int sequencia = 0;
