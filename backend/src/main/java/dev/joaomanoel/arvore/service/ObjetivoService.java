@@ -10,6 +10,7 @@ import dev.joaomanoel.arvore.entity.Atividade;
 import dev.joaomanoel.arvore.entity.Objetivo;
 import dev.joaomanoel.arvore.exception.NaoEncontradoException;
 import dev.joaomanoel.arvore.repository.AcumuladoPorObjetivo;
+import dev.joaomanoel.arvore.repository.AreaRepository;
 import dev.joaomanoel.arvore.repository.ConclusaoRepository;
 import dev.joaomanoel.arvore.repository.ObjetivoRepository;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
@@ -27,16 +28,19 @@ import org.springframework.stereotype.Service;
 public class ObjetivoService {
 
     private final ObjetivoRepository objetivoRepository;
+    private final AreaRepository areaRepository;
     private final ConclusaoRepository conclusaoRepository;
     private final CatalogoService catalogoService;
     private final ProgressoService progressoService;
 
     public ObjetivoService(
             ObjetivoRepository objetivoRepository,
+            AreaRepository areaRepository,
             ConclusaoRepository conclusaoRepository,
             CatalogoService catalogoService,
             ProgressoService progressoService) {
         this.objetivoRepository = objetivoRepository;
+        this.areaRepository = areaRepository;
         this.conclusaoRepository = conclusaoRepository;
         this.catalogoService = catalogoService;
         this.progressoService = progressoService;
@@ -120,6 +124,9 @@ public class ObjetivoService {
     }
 
     public ObjetivoDTO criar(UUID areaId, CriarObjetivoRequest requisicao) {
+        if (!areaRepository.existsById(areaId)) {
+            throw new NaoEncontradoException("Área não encontrada");
+        }
         Objetivo objetivo = new Objetivo();
         objetivo.setAreaId(areaId);
         objetivo.setDescricao(requisicao.descricao());
