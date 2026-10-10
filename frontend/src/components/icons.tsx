@@ -218,3 +218,28 @@ export function IconSearch(props: IconProps) {
     </svg>
   )
 }
+
+export function IconPlay(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M8 5.5v13l10.5-6.5z" />
+    </svg>
+  )
+}
+
+export function IconStop(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="6.5" y="6.5" width="11" height="11" rx="1.5" />
+    </svg>
+  )
+}
+
+export function IconTimer(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="13" r="7.5" />
+      <path d="M12 9v4l2.5 2M9.5 2.5h5" />
+    </svg>
+  )
+}
