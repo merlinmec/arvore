@@ -1,7 +1,6 @@
 package dev.joaomanoel.arvore.controller;
 
 import dev.joaomanoel.arvore.dto.NotaComAreaDTO;
-import dev.joaomanoel.arvore.entity.Tag;
 import dev.joaomanoel.arvore.repository.TagRepository;
 import dev.joaomanoel.arvore.service.NotaService;
 import java.util.List;
@@ -24,7 +23,7 @@ public class TagController {
 
     @GetMapping
     public List<String> listarTodas() {
-        return tagRepository.findAll().stream().map(Tag::getNome).sorted().toList();
+        return tagRepository.nomesEmUso();
     }
 
     @GetMapping("/{nome}/notas")
