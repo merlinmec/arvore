@@ -1,6 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from './api'
-import type { AreaArvore, DiaConsistencia, DiaHoje, ResumoInsights, Revisao, RevisaoSemana } from './types'
+import type {
+  AreaArvore,
+  DiaConsistencia,
+  DiaHoje,
+  Diario,
+  DiarioConsistencia,
+  ResumoInsights,
+  Revisao,
+  RevisaoSemana,
+} from './types'
 
 /**
  * Hooks de leitura compartilhados. As chaves começam por um prefixo estável ('hoje', 'insights',
@@ -62,5 +71,26 @@ export function useRevisoes() {
   return useQuery({
     queryKey: ['revisoes', 'lista'],
     queryFn: async () => (await api.get<Revisao[]>('/revisoes')).data,
+  })
+}
+
+export function useDiario(data: string, habilitada = true) {
+  return useQuery({
+    queryKey: ['diario', data],
+    queryFn: async () => (await api.get<Diario>(`/diario/${data}`)).data,
+    enabled: habilitada,
+  })
+}
+
+export function useDiarioConsistencia(dias: number, areaId: string | null) {
+  return useQuery({
+    queryKey: ['insights', 'diario', dias, areaId],
+    queryFn: async () =>
+      (
+        await api.get<DiarioConsistencia>('/insights/diario', {
+          params: { dias, areaId: areaId ?? undefined },
+        })
+      ).data,
+    placeholderData: (anterior) => anterior,
   })
 }
