@@ -4,13 +4,25 @@ import { caminhoAte, achatarArvore } from '../lib/arvore'
 import { useAlternarConclusao } from '../lib/conclusao'
 import { corDaArea } from '../lib/cores'
 import { hojeIso, somarDias } from '../lib/datas'
-import { useAreas, useDia } from '../lib/queries'
+import { useControleFoco } from '../lib/foco'
+import { useAreas, useDia, useFocoAtual } from '../lib/queries'
 import type { ItemHoje } from '../lib/types'
-import { IconBranches, IconCalendar, IconChart, IconCheck, IconDatabase, IconPlus, IconSun, IconX } from './icons'
+import {
+  IconBranches,
+  IconCalendar,
+  IconChart,
+  IconCheck,
+  IconDatabase,
+  IconPlay,
+  IconPlus,
+  IconStop,
+  IconSun,
+  IconX,
+} from './icons'
 
 interface Comando {
   id: string
-  grupo: 'Ir para' | 'Áreas' | 'Hoje'
+  grupo: 'Ir para' | 'Áreas' | 'Hoje' | 'Foco'
   rotulo: string
   detalhe?: string
   /** Palavras extras pra busca, além do rótulo e do detalhe. */
@@ -52,6 +64,10 @@ export function PaletaComandos({ aoFechar }: { aoFechar: () => void }) {
   const { data: areas } = useAreas()
   const { data: dia } = useDia(hoje)
   const { mutate: marcar } = useAlternarConclusao(hoje)
+  const { data: sessao } = useFocoAtual()
+  const { iniciar, parar } = useControleFoco()
+  const { mutate: iniciarFoco } = iniciar
+  const { mutate: pararFoco } = parar
   const [busca, setBusca] = useState('')
   const [ativo, setAtivo] = useState(0)
   const lista = useRef<HTMLUListElement>(null)
@@ -111,6 +127,31 @@ export function PaletaComandos({ aoFechar }: { aoFechar: () => void }) {
       icone: item.concluido ? <IconX /> : <IconCheck />,
       executar: () => marcar(item),
     }))
+    const foco: Comando[] = [
+      ...(sessao
+        ? [
+            {
+              id: 'parar-foco',
+              grupo: 'Foco' as const,
+              rotulo: `Parar o foco em ${sessao.atividadeNome}`,
+              termos: 'temporizador cronometro',
+              icone: <IconStop />,
+              executar: () => pararFoco(),
+            },
+          ]
+        : []),
+      ...(dia?.itens ?? [])
+        .filter((item) => !item.negativa && item.atividadeId !== sessao?.atividadeId)
+        .map((item) => ({
+          id: `foco-${item.atividadeId}`,
+          grupo: 'Foco' as const,
+          rotulo: `Iniciar foco em ${item.atividadeNome}`,
+          detalhe: item.areaNome,
+          termos: 'temporizador cronometro comecar',
+          icone: <IconPlay />,
+          executar: () => iniciarFoco(item.atividadeId),
+        })),
+    ]
     const daArvore: Comando[] = achatarArvore(areas ?? []).map((area) => {
       const caminho = caminhoAte(areas ?? [], area.id)
       const cor = caminho[caminho.length - 1]?.corTema ?? null
@@ -129,8 +170,8 @@ export function PaletaComandos({ aoFechar }: { aoFechar: () => void }) {
         executar: ir(`/areas/${area.id}`),
       }
     })
-    return [...doDia, ...telas, ...daArvore]
-  }, [marcar, areas, dia, hoje, navegar])
+    return [...doDia, ...foco, ...telas, ...daArvore]
+  }, [marcar, iniciarFoco, pararFoco, sessao, areas, dia, hoje, navegar])
 
   const visiveis = busca.trim() ? comandos.filter((comando) => combina(comando, busca)) : comandos
   const indiceAtivo = Math.min(ativo, Math.max(visiveis.length - 1, 0))

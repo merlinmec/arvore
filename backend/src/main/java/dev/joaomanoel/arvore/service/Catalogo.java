@@ -138,6 +138,11 @@ public class Catalogo {
         return areas.containsKey(id);
     }
 
+    /** A atividade com esse id, ou null se não existir. */
+    public Atividade atividade(UUID id) {
+        return atividades.get(id);
+    }
+
     public Objetivo objetivoDe(Atividade atividade) {
         return objetivos.get(atividade.getObjetivoId());
     }
