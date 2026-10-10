@@ -1,6 +1,6 @@
 # Roadmap do Árvore
 
-Documento vivo com a direção do produto: em que apps parecidos se inspira, as diretrizes que valem pra qualquer feature nova, as metas e as fases de evolução. Atualizado em 09/10/2026.
+Documento vivo com a direção do produto: em que apps parecidos se inspira, as diretrizes que valem pra qualquer feature nova, as metas e as fases de evolução. Atualizado em 10/10/2026.
 
 ---
 
@@ -77,7 +77,7 @@ Inspiração: Loop Habit Tracker, Streaks, "Goal-Tab".
 Inspiração: Sunsama, Clockify, Habi.
 
 - [x] **Revisão semanal guiada** (09/10/2026): tela Revisão em 4 passos — como foi a semana (taxa contra a anterior e os dias), o que escapou (dias perdidos por atividade, recaídas à parte), uma nota guardada por semana e o ajuste da grade. Domingo, a tela Hoje convida pra revisar enquanto a semana não tem nota. O ajuste da grade vale a partir de hoje, como qualquer mudança de grade (vigência futura ficou de fora)
-- [ ] **Diário do dia:** nota por data com humor/energia (1–5), cruzável com a consistência no Painel
+- [x] **Diário do dia** (10/10/2026): humor e energia (1–5) e uma nota curta por data, no fim da tela Hoje. Os níveis salvam no clique e a nota ao sair do campo; tudo vazio apaga o registro. No Painel, um bloco mostra a taxa de conclusão por nível de humor e de energia no período (com o filtro de área), e compara os dias de nível alto (4–5) com os de nível baixo (1–2)
 - [ ] **Temporizador de foco** por atividade, registrando minutos (dashboard de tempo por área, estilo Clockify)
 - [ ] **Lembretes** por atividade (notificação do navegador/PWA)
 

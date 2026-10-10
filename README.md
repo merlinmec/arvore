@@ -9,6 +9,7 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 - **Hábitos negativos** ("não fumar"): valem todo dia, e você registra só as recaídas
 - **Hoje**: plano do dia agrupado por área, navegação por data com a tira da semana, registro retroativo e sequência (streak) por atividade
 - **Painel**: taxa de conclusão com variação contra o período anterior, série diária por área, consistência por área e por dia da semana, heatmap anual e ranking de atividades com a força de cada hábito (pontuação com decaimento), com filtro de período e de área
+- **Diário do dia**: humor e energia (1 a 5) e uma nota por data, cruzados com a consistência no Painel
 - **Revisão semanal** guiada: como foi a semana, o que escapou, uma nota e o ajuste da grade da próxima
 - **Notas** em Markdown com tags que cruzam áreas
 
@@ -106,6 +107,8 @@ Os testes unitários ficam em `util/`. Os de integração (`integracao/`) sobem 
 | `GET` | `/api/areas` | Árvore de áreas com o progresso da semana |
 | `GET` | `/api/revisoes/{data}` | Retrato da semana que contém a data (até hoje): taxa contra a anterior, dias, o que escapou por atividade e a nota |
 | `PUT` | `/api/revisoes/{data}` | Salva a nota da revisão da semana (`{"nota"}`); `GET /api/revisoes` lista as revisões feitas |
+| `GET`/`PUT`/`DELETE` | `/api/diario/{data}` | Diário do dia (`{"humor", "energia", "nota"}`, níveis 1–5). O `PUT` substitui o registro inteiro, e tudo vazio apaga; dia futuro dá 400. `GET /api/diario?inicio=&fim=` lista o período |
+| `GET` | `/api/insights/diario?dias=30&areaId=` | Taxa de conclusão por nível de humor e de energia registrados no diário |
 
 ## Frontend (`frontend/`)
 
