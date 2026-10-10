@@ -6,12 +6,13 @@ import {
   DiarioXConsistencia,
   PadraoSemanal,
   TabelaAtividades,
+  TempoDeFoco,
 } from '../components/graficos/PainelBlocos'
 import { SerieDiaria } from '../components/graficos/SerieDiaria'
 import { IconChart, IconFlame, IconTrendDown, IconTrendUp } from '../components/icons'
 import { achatarArvore } from '../lib/arvore'
 import { formatarCurto } from '../lib/datas'
-import { useAreas, useDiarioConsistencia, useHistorico, useResumo } from '../lib/queries'
+import { useAreas, useDiarioConsistencia, useHistorico, useResumo, useTempoFoco } from '../lib/queries'
 
 const PERIODOS = [
   { dias: 7, rotulo: '7 dias' },
@@ -63,6 +64,7 @@ export function Painel() {
   const { data: resumo, isLoading, isError } = useResumo(dias, areaId)
   const { data: historico } = useHistorico({ areaId })
   const { data: diario } = useDiarioConsistencia(dias, areaId)
+  const { data: tempo } = useTempoFoco(dias, areaId)
 
   function atualizar(chave: string, valor: string | null) {
     const proximos = new URLSearchParams(parametros)
@@ -211,6 +213,12 @@ export function Painel() {
               <TabelaAtividades atividades={resumo.atividades} />
             </Bloco>
           </div>
+
+          {tempo && (
+            <Bloco titulo="Tempo de foco" detalhe="cronometrado pelo botão ▶ da tela Hoje">
+              <TempoDeFoco tempo={tempo} />
+            </Bloco>
+          )}
 
           {diario && (
             <Bloco titulo="Diário e consistência" detalhe={`${diario.diasRegistrados} dias registrados no período`}>

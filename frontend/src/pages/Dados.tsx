@@ -43,6 +43,7 @@ function resumoDoBackup(backup: Backup | ResumoBackup) {
     plural(contar(backup.notas), 'nota', 'notas'),
     plural(contar(backup.diario), 'dia de diário', 'dias de diário'),
     plural(contar(backup.revisoes), 'revisão', 'revisões'),
+    plural(contar(backup.sessoesFoco), 'sessão de foco', 'sessões de foco'),
   ].join(', ')
 }
 
