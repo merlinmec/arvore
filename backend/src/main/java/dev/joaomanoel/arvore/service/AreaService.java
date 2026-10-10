@@ -8,10 +8,12 @@ import dev.joaomanoel.arvore.entity.Area;
 import dev.joaomanoel.arvore.entity.StatusObjetivo;
 import dev.joaomanoel.arvore.exception.NaoEncontradoException;
 import dev.joaomanoel.arvore.repository.AreaRepository;
+import dev.joaomanoel.arvore.repository.TagRepository;
 import dev.joaomanoel.arvore.util.Consistencia.Rotina;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AreaService {
@@ -19,14 +21,17 @@ public class AreaService {
     private final AreaRepository areaRepository;
     private final CatalogoService catalogoService;
     private final ProgressoService progressoService;
+    private final TagRepository tagRepository;
 
     public AreaService(
             AreaRepository areaRepository,
             CatalogoService catalogoService,
-            ProgressoService progressoService) {
+            ProgressoService progressoService,
+            TagRepository tagRepository) {
         this.areaRepository = areaRepository;
         this.catalogoService = catalogoService;
         this.progressoService = progressoService;
+        this.tagRepository = tagRepository;
     }
 
     public AreaDTO criar(CriarAreaRequest requisicao) {
@@ -70,8 +75,12 @@ public class AreaService {
         return paraDTO(salva);
     }
 
+    @Transactional
     public void excluir(UUID id) {
         areaRepository.deleteById(id);
+        areaRepository.flush();
+        // as notas da área saem em cascata no banco; as tags que só elas usavam ficariam órfãs
+        tagRepository.apagarOrfas();
     }
 
     public List<AreaArvoreDTO> listarArvore() {
