@@ -190,7 +190,14 @@ public class BackupService {
                                 linha.getObject("energia", Integer.class),
                                 linha.getString("nota"),
                                 instante(linha, "criado_em"),
-                                instante(linha, "atualizado_em"))));
+                                instante(linha, "atualizado_em"))),
+                jdbc.query(
+                        "select * from sessao_foco order by inicio, id",
+                        (linha, n) -> new BackupDTO.SessaoFoco(
+                                uuid(linha, "id"),
+                                uuid(linha, "atividade_id"),
+                                instante(linha, "inicio"),
+                                instante(linha, "fim"))));
     }
 
     /**
@@ -211,6 +218,7 @@ public class BackupService {
         List<BackupDTO.Revisao> revisoes = lista(backup.revisoes());
         List<BackupDTO.Diario> diario = lista(backup.diario());
         List<BackupDTO.Agenda> agendas = lista(backup.agendas());
+        List<BackupDTO.SessaoFoco> sessoesFoco = lista(backup.sessoesFoco());
         // o banco guarda texto livre nessas colunas; valor estranho quebraria a leitura pelo JPA depois
         objetivos.forEach(objetivo -> valorDoEnum(StatusObjetivo.class, objetivo.status(), "status"));
         agendas.forEach(agenda -> valorDoEnum(DiaSemana.class, agenda.diaSemana(), "dia da semana"));
@@ -218,7 +226,7 @@ public class BackupService {
         // o que o JPA tiver pendente vai antes, e o que ele tiver em cache some depois
         entityManager.flush();
         try {
-            // area leva junto, em cascata, notas, objetivos, atividades, grades e conclusões
+            // area leva junto, em cascata, notas, objetivos, atividades, grades, conclusões e sessões de foco
             jdbc.update("delete from area");
             jdbc.update("delete from tag");
             jdbc.update("delete from revisao_semanal");
@@ -271,13 +279,24 @@ public class BackupService {
                     "insert into diario (id, data, humor, energia, nota, criado_em, atualizado_em) values (?, ?, ?, ?, ?, ?, ?)",
                     diario,
                     d -> new Object[] {d.id(), d.data(), d.humor(), d.energia(), d.nota(), ts(d.criadoEm()), ts(d.atualizadoEm())});
+            inserir(
+                    "insert into sessao_foco (id, atividade_id, inicio, fim) values (?, ?, ?, ?)",
+                    sessoesFoco,
+                    s -> new Object[] {s.id(), s.atividadeId(), ts(s.inicio()), s.fim() == null ? null : Timestamp.from(s.fim())});
         } catch (DataIntegrityViolationException erro) {
             throw new IllegalArgumentException("Backup inconsistente: " + causaRaiz(erro));
         }
         entityManager.clear();
 
         return new ResumoBackupDTO(
-                areas.size(), notas.size(), objetivos.size(), atividades.size(), conclusoes.size(), revisoes.size(), diario.size());
+                areas.size(),
+                notas.size(),
+                objetivos.size(),
+                atividades.size(),
+                conclusoes.size(),
+                revisoes.size(),
+                diario.size(),
+                sessoesFoco.size());
     }
 
     /**

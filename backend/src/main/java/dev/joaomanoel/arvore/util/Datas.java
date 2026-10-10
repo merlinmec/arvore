@@ -28,6 +28,15 @@ public final class Datas {
         return inicioDaSemana().plusDays(6);
     }
 
+    public static ZoneId fuso() {
+        return FUSO;
+    }
+
+    /** Meia-noite do dia, no fuso do app. */
+    public static Instant inicioDoDia(LocalDate data) {
+        return data.atStartOfDay(FUSO).toInstant();
+    }
+
     /** Dia civil, no fuso do app, em que o instante aconteceu. */
     public static LocalDate dataDe(Instant instante) {
         return instante.atZone(FUSO).toLocalDate();

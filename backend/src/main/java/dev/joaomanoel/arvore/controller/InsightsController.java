@@ -3,7 +3,9 @@ package dev.joaomanoel.arvore.controller;
 import dev.joaomanoel.arvore.dto.DiaConsistenciaDTO;
 import dev.joaomanoel.arvore.dto.DiarioConsistenciaDTO;
 import dev.joaomanoel.arvore.dto.ResumoInsightsDTO;
+import dev.joaomanoel.arvore.dto.TempoFocoDTO;
 import dev.joaomanoel.arvore.service.DiarioService;
+import dev.joaomanoel.arvore.service.FocoService;
 import dev.joaomanoel.arvore.service.InsightsService;
 import dev.joaomanoel.arvore.util.Datas;
 import java.time.LocalDate;
@@ -21,10 +23,20 @@ public class InsightsController {
 
     private final InsightsService insightsService;
     private final DiarioService diarioService;
+    private final FocoService focoService;
 
-    public InsightsController(InsightsService insightsService, DiarioService diarioService) {
+    public InsightsController(
+            InsightsService insightsService, DiarioService diarioService, FocoService focoService) {
         this.insightsService = insightsService;
         this.diarioService = diarioService;
+        this.focoService = focoService;
+    }
+
+    /** Tempo de foco do período: total, dia a dia, por área e por atividade. */
+    @GetMapping("/tempo")
+    public TempoFocoDTO tempo(
+            @RequestParam(defaultValue = "30") int dias, @RequestParam(required = false) UUID areaId) {
+        return focoService.tempo(dias, areaId);
     }
 
     /** Taxa de conclusão por nível de humor e de energia registrados no diário. */

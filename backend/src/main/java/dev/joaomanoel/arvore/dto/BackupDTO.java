@@ -22,9 +22,13 @@ public record BackupDTO(
         List<Frequencia> frequencias,
         List<Conclusao> conclusoes,
         List<Revisao> revisoes,
-        List<Diario> diario) {
+        List<Diario> diario,
+        List<SessaoFoco> sessoesFoco) {
 
-    /** Versão do formato; sobe quando um campo muda de sentido ou vira obrigatório. */
+    /**
+     * Versão do formato; sobe quando um campo muda de sentido ou vira obrigatório. Lista nova e
+     * opcional (como {@code sessoesFoco}) não muda a versão: backup antigo só não a traz.
+     */
     public static final int VERSAO_ATUAL = 1;
 
     public record Area(
@@ -64,6 +68,8 @@ public record BackupDTO(
     public record Conclusao(UUID id, UUID atividadeId, LocalDate data, BigDecimal valor, Instant criadoEm) {}
 
     public record Revisao(UUID id, LocalDate semana, String nota, Instant criadoEm, Instant atualizadoEm) {}
+
+    public record SessaoFoco(UUID id, UUID atividadeId, Instant inicio, Instant fim) {}
 
     public record Diario(
             UUID id,
