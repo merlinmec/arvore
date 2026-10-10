@@ -78,7 +78,7 @@ Inspiração: Sunsama, Clockify, Habi.
 
 - [x] **Revisão semanal guiada** (09/10/2026): tela Revisão em 4 passos — como foi a semana (taxa contra a anterior e os dias), o que escapou (dias perdidos por atividade, recaídas à parte), uma nota guardada por semana e o ajuste da grade. Domingo, a tela Hoje convida pra revisar enquanto a semana não tem nota. O ajuste da grade vale a partir de hoje, como qualquer mudança de grade (vigência futura ficou de fora)
 - [x] **Diário do dia** (10/10/2026): humor e energia (1–5) e uma nota curta por data, no fim da tela Hoje. Os níveis salvam no clique e a nota ao sair do campo; tudo vazio apaga o registro. No Painel, um bloco mostra a taxa de conclusão por nível de humor e de energia no período (com o filtro de área), e compara os dias de nível alto (4–5) com os de nível baixo (1–2)
-- [ ] **Temporizador de foco** por atividade, registrando minutos (dashboard de tempo por área, estilo Clockify)
+- [x] **Temporizador de foco** (10/10/2026): botão ▶ em cada atividade da tela Hoje (e na paleta), uma sessão por vez (começar outra encerra a anterior), barra "Em foco" com o cronômetro em qualquer tela, e no Painel o tempo do período por área e por atividade, estilo Clockify. Sessão que atravessa a meia-noite se divide entre os dias no fuso do app; sessão esquecida aberta é cortada em 12 h; parada com menos de 1 minuto é descartada como clique sem querer. As regras moram em `util/TempoCalculo`, com teste, e as sessões entram no backup
 - [ ] **Lembretes** por atividade (notificação do navegador/PWA)
 
 ### Fase 4 — Plataforma e qualidade
