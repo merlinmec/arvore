@@ -50,12 +50,16 @@ public class NotaService {
         nota.setCorpo(requisicao.corpo() != null ? requisicao.corpo() : "");
         nota.setTags(resolverTags(requisicao.tags()));
 
-        Nota salva = notaRepository.save(nota);
+        Nota salva = notaRepository.saveAndFlush(nota);
+        tagRepository.apagarOrfas();
         return paraDTO(salva);
     }
 
+    @Transactional
     public void excluir(UUID id) {
         notaRepository.deleteById(id);
+        notaRepository.flush();
+        tagRepository.apagarOrfas();
     }
 
     @Transactional
