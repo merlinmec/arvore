@@ -87,7 +87,7 @@ Inspiração: Sunsama, Clockify, Habi.
 - [x] **`docker-compose.yml`** (09/10/2026) com Postgres, backend e frontend (nginx servindo o build e repassando `/api`)
 - [ ] PWA instalável e com cache offline da tela Hoje
 - [ ] Atalhos de teclado e command palette (`Ctrl+K`: ir pra área, marcar atividade)
-- [ ] Exportar CSV das conclusões e backup/restauração em JSON
+- [x] **Exportar e backup** (10/10/2026): tela Dados com o CSV das conclusões (`;`, vírgula decimal e BOM, pra abrir direto no Excel; caminho completo da área; recaídas marcadas), o backup completo em JSON e a restauração. O backup guarda ids e datas de criação como estão, porque a consistência depende delas, então restaurar devolve exatamente o mesmo estado. A restauração substitui tudo numa transação via JDBC (o `@PrePersist` das entidades reescreveria `criado_em`), ordena as áreas com o pai antes do filho e, se algo estiver inconsistente, devolve 400 sem mudar nada
 - [x] **Exclusão com desfazer** (10/10/2026): no lugar do `window.confirm`, atividade, objetivo e nota somem na hora e um aviso oferece "Desfazer" por 6 s (ou `Ctrl+Z`); só depois a exclusão vai pra API. Se a aba fechar antes, as pendentes são disparadas na hora, e se a requisição não sair o item continua existindo. A área, que leva tudo junto e sai da tela, ganhou uma confirmação inline com o foco em "Cancelar"
 
 ### Fase 5 — Multiusuário (só se o projeto mudar de escopo)

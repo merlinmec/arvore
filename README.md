@@ -12,6 +12,7 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 - **Diário do dia**: humor e energia (1 a 5) e uma nota por data, cruzados com a consistência no Painel
 - **Revisão semanal** guiada: como foi a semana, o que escapou, uma nota e o ajuste da grade da próxima
 - **Notas** em Markdown com tags que cruzam áreas
+- **Dados**: CSV das conclusões pra planilha, backup completo em JSON e restauração
 - **Exclusão com desfazer**: atividade, objetivo e nota somem na hora, com alguns segundos pra desfazer (ou `Ctrl+Z`)
 
 Direção do produto, diretrizes e próximas fases: [`docs/ROADMAP.md`](docs/ROADMAP.md).
@@ -110,6 +111,8 @@ Os testes unitários ficam em `util/`. Os de integração (`integracao/`) sobem 
 | `PUT` | `/api/revisoes/{data}` | Salva a nota da revisão da semana (`{"nota"}`); `GET /api/revisoes` lista as revisões feitas |
 | `GET`/`PUT`/`DELETE` | `/api/diario/{data}` | Diário do dia (`{"humor", "energia", "nota"}`, níveis 1–5). O `PUT` substitui o registro inteiro, e tudo vazio apaga; dia futuro dá 400. `GET /api/diario?inicio=&fim=` lista o período |
 | `GET` | `/api/insights/diario?dias=30&areaId=` | Taxa de conclusão por nível de humor e de energia registrados no diário |
+| `GET` | `/api/dados/conclusoes.csv?inicio=&fim=` | CSV das conclusões (padrão: tudo até hoje), com `;`, vírgula decimal e BOM pro Excel |
+| `GET`/`PUT` | `/api/dados/backup` | Baixa o backup completo em JSON / substitui todos os dados por um backup (inconsistente dá 400 e nada muda) |
 
 ## Frontend (`frontend/`)
 
