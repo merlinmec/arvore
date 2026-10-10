@@ -232,3 +232,26 @@ export interface DiarioConsistencia {
   porHumor: NivelConsistencia[]
   porEnergia: NivelConsistencia[]
 }
+
+/** Backup completo; o frontend só lê o necessário pra mostrar o resumo antes de restaurar. */
+export interface Backup {
+  versao: number
+  geradoEm: string
+  areas?: unknown[]
+  objetivos?: unknown[]
+  atividades?: unknown[]
+  conclusoes?: unknown[]
+  notas?: unknown[]
+  revisoes?: unknown[]
+  diario?: unknown[]
+}
+
+export interface ResumoBackup {
+  areas: number
+  notas: number
+  objetivos: number
+  atividades: number
+  conclusoes: number
+  revisoes: number
+  diario: number
+}
