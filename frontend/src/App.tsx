@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthProvider } from './lib/auth'
 import { DesfazerProvider } from './lib/desfazer'
 import { AreaDetalhe } from './pages/AreaDetalhe'
+import { Dados } from './pages/Dados'
 import { Areas } from './pages/Areas'
 import { Hoje } from './pages/Hoje'
 import { Login } from './pages/Login'
@@ -32,6 +33,7 @@ function App() {
                   <Route path="areas/nova" element={<NovaArea />} />
                   <Route path="areas/:id" element={<AreaDetalhe />} />
                   <Route path="tags/:nome" element={<TagDetalhe />} />
+                  <Route path="dados" element={<Dados />} />
                 </Route>
               </Route>
             </Routes>
