@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAreas } from '../lib/queries'
 import { useAuth } from '../lib/useAuth'
-import { IconBranches, IconCalendar, IconChart, IconDatabase, IconLogOut, IconSun, IconTree } from './icons'
+import { IconBranches, IconCalendar, IconChart, IconDatabase, IconLogOut, IconSearch, IconSun, IconTree } from './icons'
+import { PaletaComandos } from './PaletaComandos'
 
 const NAVEGACAO = [
   { para: '/', rotulo: 'Hoje', Icone: IconSun, fim: true },
@@ -63,6 +64,31 @@ export function Layout() {
   const { sair } = useAuth()
   const { pathname } = useLocation()
   const navCelular = useRef<HTMLElement>(null)
+  const [paletaAberta, setPaletaAberta] = useState(false)
+  const focoAnterior = useRef<HTMLElement | null>(null)
+
+  function abrirPaleta() {
+    focoAnterior.current = document.activeElement as HTMLElement | null
+    setPaletaAberta(true)
+  }
+
+  function fecharPaleta() {
+    setPaletaAberta(false)
+    // devolve o foco pra onde estava, como qualquer diálogo
+    requestAnimationFrame(() => focoAnterior.current?.focus())
+  }
+
+  useEffect(() => {
+    function aoTeclar(evento: KeyboardEvent) {
+      if ((evento.ctrlKey || evento.metaKey) && evento.key.toLowerCase() === 'k') {
+        evento.preventDefault()
+        if (paletaAberta) fecharPaleta()
+        else abrirPaleta()
+      }
+    }
+    window.addEventListener('keydown', aoTeclar)
+    return () => window.removeEventListener('keydown', aoTeclar)
+  })
 
   // no celular o nav rola na horizontal: traz o item da página atual pra dentro da tela
   useEffect(() => {
@@ -76,7 +102,17 @@ export function Layout() {
           <Marca />
         </div>
 
-        <nav className="mt-7 space-y-0.5" aria-label="Principal">
+        <button
+          type="button"
+          onClick={abrirPaleta}
+          className="mt-6 flex items-center gap-2.5 rounded-md border border-line px-2.5 py-1.5 text-sm text-ink-faint transition-colors hover:border-line-strong hover:text-ink-muted"
+        >
+          <IconSearch className="h-4 w-4" />
+          <span className="flex-1 text-left">Buscar</span>
+          <kbd className="font-sans text-[11px] text-ink-faint">Ctrl K</kbd>
+        </button>
+
+        <nav className="mt-4 space-y-0.5" aria-label="Principal">
           {NAVEGACAO.map(({ para, rotulo, Icone, fim }) => (
             <NavLink key={para} to={para} end={fim} className={classeItem}>
               <Icone className="h-4 w-4 shrink-0 text-ink-faint transition-colors group-hover:text-ink-muted group-aria-[current=page]:text-accent-strong" />
@@ -102,14 +138,24 @@ export function Layout() {
       <header className="sticky top-0 z-20 border-b border-line bg-canvas/90 backdrop-blur-sm lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <Marca />
-          <button
-            type="button"
-            onClick={sair}
-            aria-label="Sair"
-            className="rounded-md p-1.5 text-ink-faint transition-colors hover:bg-surface hover:text-ink-muted"
-          >
-            <IconLogOut className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={abrirPaleta}
+              aria-label="Buscar"
+              className="rounded-md p-1.5 text-ink-faint transition-colors hover:bg-surface hover:text-ink-muted"
+            >
+              <IconSearch className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={sair}
+              aria-label="Sair"
+              className="rounded-md p-1.5 text-ink-faint transition-colors hover:bg-surface hover:text-ink-muted"
+            >
+              <IconLogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
         <nav ref={navCelular} className="flex gap-1 overflow-x-auto px-3 pb-2" aria-label="Principal">
           {NAVEGACAO.map(({ para, rotulo, Icone, fim }) => (
@@ -124,6 +170,8 @@ export function Layout() {
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <Outlet />
       </main>
+
+      {paletaAberta && <PaletaComandos aoFechar={fecharPaleta} />}
     </div>
   )
 }
