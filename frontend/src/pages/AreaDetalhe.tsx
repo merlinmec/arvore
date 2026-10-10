@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ConfirmarExclusao } from '../components/ConfirmarExclusao'
 import { EditarAreaForm } from '../components/EditarAreaForm'
 import { Heatmap } from '../components/graficos/Heatmap'
 import { IconChevronRight, IconPencil, IconTrash } from '../components/icons'
@@ -13,6 +14,7 @@ import { caminhoAte } from '../lib/arvore'
 import { corDaArea } from '../lib/cores'
 import { hojeIso, inicioDaSemana, somarDias } from '../lib/datas'
 import { useAreas, useHistorico } from '../lib/queries'
+import { useDesfazer } from '../lib/useDesfazer'
 import type { Nota, ObjetivoComAtividades } from '../lib/types'
 
 const SEMANAS_HISTORICO = 26
@@ -22,6 +24,7 @@ export function AreaDetalhe() {
   const navegar = useNavigate()
   const queryClient = useQueryClient()
   const [editando, setEditando] = useState(false)
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
 
   const { data: areas, isLoading: carregandoAreas } = useAreas()
   const caminho = id ? caminhoAte(areas ?? [], id) : []
@@ -42,17 +45,22 @@ export function AreaDetalhe() {
     },
   })
 
-  const { data: objetivos, isLoading: carregandoObjetivos } = useQuery({
+  const { data: todosObjetivos, isLoading: carregandoObjetivos } = useQuery({
     queryKey: ['objetivos', id],
     queryFn: async () => (await api.get<ObjetivoComAtividades[]>(`/areas/${id}/objetivos`)).data,
     enabled: Boolean(id),
   })
 
-  const { data: notas, isLoading: carregandoNotas } = useQuery({
+  const { data: todasNotas, isLoading: carregandoNotas } = useQuery({
     queryKey: ['notas', id],
     queryFn: async () => (await api.get<Nota[]>(`/areas/${id}/notas`)).data,
     enabled: Boolean(id),
   })
+
+  // o que está com exclusão pendente já sai das listas e dos contadores
+  const { pendente } = useDesfazer()
+  const objetivos = todosObjetivos?.filter((objetivo) => !pendente(objetivo.id))
+  const notas = todasNotas?.filter((nota) => !pendente(nota.id))
 
   if (carregandoAreas) {
     return <div className="h-48 animate-pulse rounded-xl bg-surface" />
@@ -108,30 +116,37 @@ export function AreaDetalhe() {
             }
           >
             <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface to-transparent" />
-            <div className="absolute right-3 top-3 flex gap-1">
-              <button
-                type="button"
-                onClick={() => setEditando(true)}
-                aria-label="Editar área"
-                title="Editar área"
-                className="rounded-md bg-canvas/60 p-2 text-ink-muted backdrop-blur-sm transition-colors hover:bg-canvas/80 hover:text-ink"
-              >
-                <IconPencil className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm(`Excluir a área "${area.nome}" e tudo dentro dela (subáreas, objetivos, notas)?`)) {
-                    excluirArea.mutate()
-                  }
-                }}
-                aria-label="Excluir área"
-                title="Excluir área"
-                className="rounded-md bg-canvas/60 p-2 text-ink-muted backdrop-blur-sm transition-colors hover:bg-danger-soft hover:text-danger"
-              >
-                <IconTrash className="h-4 w-4" />
-              </button>
-            </div>
+            {confirmandoExclusao ? (
+              <div className="absolute inset-x-3 top-3 flex justify-end">
+                <ConfirmarExclusao
+                  pergunta={`Excluir "${area.nome}" com subáreas, objetivos e notas? Não dá pra desfazer.`}
+                  ocupado={excluirArea.isPending}
+                  aoConfirmar={() => excluirArea.mutate()}
+                  aoCancelar={() => setConfirmandoExclusao(false)}
+                />
+              </div>
+            ) : (
+              <div className="absolute right-3 top-3 flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setEditando(true)}
+                  aria-label="Editar área"
+                  title="Editar área"
+                  className="rounded-md bg-canvas/60 p-2 text-ink-muted backdrop-blur-sm transition-colors hover:bg-canvas/80 hover:text-ink"
+                >
+                  <IconPencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmandoExclusao(true)}
+                  aria-label="Excluir área"
+                  title="Excluir área"
+                  className="rounded-md bg-canvas/60 p-2 text-ink-muted backdrop-blur-sm transition-colors hover:bg-danger-soft hover:text-danger"
+                >
+                  <IconTrash className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="grid gap-6 px-6 pb-6 lg:grid-cols-[1fr_auto] lg:items-end">
