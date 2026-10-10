@@ -14,7 +14,14 @@ import { Painel } from './pages/Painel'
 import { Revisao } from './pages/Revisao'
 import { TagDetalhe } from './pages/TagDetalhe'
 
-const queryClient = new QueryClient()
+// offlineFirst: sem rede, a consulta ainda é feita, e o service worker responde com a última cópia
+// salva. No modo padrão o React Query só esperaria a rede voltar e a tela ficaria carregando.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { networkMode: 'offlineFirst' },
+    mutations: { networkMode: 'offlineFirst' },
+  },
+})
 
 function App() {
   return (
