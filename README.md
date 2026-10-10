@@ -12,6 +12,7 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 - **Diário do dia**: humor e energia (1 a 5) e uma nota por data, cruzados com a consistência no Painel
 - **Revisão semanal** guiada: como foi a semana, o que escapou, uma nota e o ajuste da grade da próxima
 - **Notas** em Markdown com tags que cruzam áreas
+- **Exclusão com desfazer**: atividade, objetivo e nota somem na hora, com alguns segundos pra desfazer (ou `Ctrl+Z`)
 
 Direção do produto, diretrizes e próximas fases: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 

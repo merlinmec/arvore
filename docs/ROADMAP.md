@@ -88,7 +88,7 @@ Inspiração: Sunsama, Clockify, Habi.
 - [ ] PWA instalável e com cache offline da tela Hoje
 - [ ] Atalhos de teclado e command palette (`Ctrl+K`: ir pra área, marcar atividade)
 - [ ] Exportar CSV das conclusões e backup/restauração em JSON
-- [ ] Trocar `window.confirm` por confirmação inline com desfazer
+- [x] **Exclusão com desfazer** (10/10/2026): no lugar do `window.confirm`, atividade, objetivo e nota somem na hora e um aviso oferece "Desfazer" por 6 s (ou `Ctrl+Z`); só depois a exclusão vai pra API. Se a aba fechar antes, as pendentes são disparadas na hora, e se a requisição não sair o item continua existindo. A área, que leva tudo junto e sai da tela, ganhou uma confirmação inline com o foco em "Cancelar"
 
 ### Fase 5 — Multiusuário (só se o projeto mudar de escopo)
 
