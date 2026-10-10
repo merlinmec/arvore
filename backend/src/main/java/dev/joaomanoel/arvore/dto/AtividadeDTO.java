@@ -1,6 +1,7 @@
 package dev.joaomanoel.arvore.dto;
 
 import dev.joaomanoel.arvore.entity.DiaSemana;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,4 +15,6 @@ public record AtividadeDTO(
         String nome,
         List<DiaSemana> diasAgendados,
         Integer vezesPorSemana,
-        boolean negativa) {}
+        boolean negativa,
+        // horário do lembrete diário, se houver
+        LocalTime lembrete) {}
