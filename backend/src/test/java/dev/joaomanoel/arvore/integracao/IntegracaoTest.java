@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.jayway.jsonpath.JsonPath;
 import dev.joaomanoel.arvore.PostgresTestcontainer;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,8 @@ abstract class IntegracaoTest {
     static final String SENHA = "senha-teste-123";
 
     @Autowired MockMvc mvc;
+    @Autowired JdbcTemplate jdbc;
+    @Autowired EntityManager entityManager;
 
     private String token;
 
@@ -67,6 +71,22 @@ abstract class IntegracaoTest {
                 .getResponse()
                 .getContentAsString();
         return JsonPath.read(resposta, "$.id");
+    }
+
+    /**
+     * Leva pra {@code dias} atrás a criação de tudo e o início das grades em vigor, como se a árvore
+     * existisse desde então. Pela API só dá pra criar no presente, e o passado sem plano não conta.
+     */
+    void recuarCriacao(int dias) {
+        // as requisições dividem a transação (e o cache do JPA) do teste: grava antes, esquece depois
+        entityManager.flush();
+        String intervalo = "interval '" + dias + " days'";
+        jdbc.update("update area set criado_em = criado_em - " + intervalo);
+        jdbc.update("update objetivo set criado_em = criado_em - " + intervalo);
+        jdbc.update("update atividade set criado_em = criado_em - " + intervalo);
+        jdbc.update("update agenda_semanal set vigente_de = vigente_de - " + dias + " where vigente_ate is null");
+        jdbc.update("update frequencia_semanal set vigente_de = vigente_de - " + dias + " where vigente_ate is null");
+        entityManager.clear();
     }
 
     /** JSON de um objeto plano a partir de pares chave/valor (só strings). */
