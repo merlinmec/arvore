@@ -1,7 +1,9 @@
 package dev.joaomanoel.arvore.controller;
 
 import dev.joaomanoel.arvore.dto.DiaConsistenciaDTO;
+import dev.joaomanoel.arvore.dto.DiarioConsistenciaDTO;
 import dev.joaomanoel.arvore.dto.ResumoInsightsDTO;
+import dev.joaomanoel.arvore.service.DiarioService;
 import dev.joaomanoel.arvore.service.InsightsService;
 import dev.joaomanoel.arvore.util.Datas;
 import java.time.LocalDate;
@@ -18,9 +20,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class InsightsController {
 
     private final InsightsService insightsService;
+    private final DiarioService diarioService;
 
-    public InsightsController(InsightsService insightsService) {
+    public InsightsController(InsightsService insightsService, DiarioService diarioService) {
         this.insightsService = insightsService;
+        this.diarioService = diarioService;
+    }
+
+    /** Taxa de conclusão por nível de humor e de energia registrados no diário. */
+    @GetMapping("/diario")
+    public DiarioConsistenciaDTO diario(
+            @RequestParam(defaultValue = "30") int dias, @RequestParam(required = false) UUID areaId) {
+        return diarioService.consistencia(dias, areaId);
     }
 
     @GetMapping("/resumo")
