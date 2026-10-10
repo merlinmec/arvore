@@ -9,6 +9,8 @@ import type {
   ResumoInsights,
   Revisao,
   RevisaoSemana,
+  SessaoFoco,
+  TempoFoco,
 } from './types'
 
 /**
@@ -88,6 +90,30 @@ export function useDiarioConsistencia(dias: number, areaId: string | null) {
     queryFn: async () =>
       (
         await api.get<DiarioConsistencia>('/insights/diario', {
+          params: { dias, areaId: areaId ?? undefined },
+        })
+      ).data,
+    placeholderData: (anterior) => anterior,
+  })
+}
+
+/** A sessão de foco contando agora, ou null (a API responde 204 sem corpo). */
+export function useFocoAtual() {
+  return useQuery({
+    queryKey: ['foco', 'atual'],
+    queryFn: async () => {
+      const resposta = await api.get<SessaoFoco | ''>('/foco/atual')
+      return resposta.status === 204 || !resposta.data ? null : resposta.data
+    },
+  })
+}
+
+export function useTempoFoco(dias: number, areaId: string | null) {
+  return useQuery({
+    queryKey: ['insights', 'tempo', dias, areaId],
+    queryFn: async () =>
+      (
+        await api.get<TempoFoco>('/insights/tempo', {
           params: { dias, areaId: areaId ?? undefined },
         })
       ).data,

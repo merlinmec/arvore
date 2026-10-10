@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { corDaArea, degrauDaTaxa } from '../../lib/cores'
+import { formatarMinutos } from '../../lib/foco'
 import {
   DIAS_SEMANA,
   type AreaConsistencia,
@@ -7,6 +8,7 @@ import {
   type DiarioConsistencia,
   type DiaSemanaConsistencia,
   type NivelConsistencia,
+  type TempoFoco,
 } from '../../lib/types'
 import { IconFlame } from '../icons'
 
@@ -252,6 +254,76 @@ export function DiarioXConsistencia({ dados }: { dados: DiarioConsistencia }) {
     <div className="flex flex-col gap-6 sm:flex-row">
       <BarrasPorNivel titulo="Humor" niveis={dados.porHumor} alto="alto" baixo="baixo" />
       <BarrasPorNivel titulo="Energia" niveis={dados.porEnergia} alto="alta" baixo="baixa" />
+    </div>
+  )
+}
+
+/** Tempo de foco do período, estilo Clockify: total, divisão por área e as atividades com mais tempo. */
+export function TempoDeFoco({ tempo }: { tempo: TempoFoco }) {
+  if (tempo.totalMinutos === 0) {
+    return (
+      <p className="text-sm text-ink-faint">
+        Nenhum tempo de foco no período. Na tela{' '}
+        <Link to="/" className="text-accent-strong hover:underline">
+          Hoje
+        </Link>
+        , o botão ▶ ao lado de uma atividade começa a contar.
+      </p>
+    )
+  }
+  const maiorArea = Math.max(...tempo.porArea.map((area) => area.minutos), 1)
+  return (
+    <div className="grid gap-6 sm:grid-cols-[12rem_1fr]">
+      <div>
+        <p className="text-3xl font-semibold tabular-nums tracking-tight text-ink">
+          {formatarMinutos(tempo.totalMinutos)}
+        </p>
+        <p className="mt-1 text-xs text-ink-faint">
+          em {tempo.sessoes} {tempo.sessoes === 1 ? 'sessão' : 'sessões'}
+        </p>
+        <ul className="mt-4 space-y-3">
+          {tempo.porArea.map((area) => (
+            <li key={area.areaId}>
+              <div className="flex items-baseline justify-between gap-2 text-xs">
+                <span className="flex min-w-0 items-center gap-1.5 text-ink-muted">
+                  <span
+                    className="h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: corDaArea(area.corTema) }}
+                  />
+                  <span className="truncate">{area.nome}</span>
+                </span>
+                <span className="shrink-0 tabular-nums text-ink-faint">{formatarMinutos(area.minutos)}</span>
+              </div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-3">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${(area.minutos / maiorArea) * 100}%`, backgroundColor: corDaArea(area.corTema) }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="min-w-0">
+        <p className="mb-2 text-xs text-ink-faint">Atividades com mais tempo</p>
+        <ul className="divide-y divide-line/60">
+          {tempo.atividades.slice(0, 6).map((atividade) => (
+            <li key={atividade.atividadeId} className="flex items-center gap-3 py-2 text-sm">
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: corDaArea(atividade.areaCorTema) }}
+              />
+              <span className="min-w-0 flex-1 truncate text-ink">{atividade.nome}</span>
+              <span className="hidden shrink-0 text-xs text-ink-faint sm:inline">
+                {atividade.sessoes} {atividade.sessoes === 1 ? 'sessão' : 'sessões'}
+              </span>
+              <span className="w-20 shrink-0 text-right tabular-nums text-ink-muted">
+                {formatarMinutos(atividade.minutos)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }

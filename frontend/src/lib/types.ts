@@ -244,6 +244,7 @@ export interface Backup {
   notas?: unknown[]
   revisoes?: unknown[]
   diario?: unknown[]
+  sessoesFoco?: unknown[]
 }
 
 export interface ResumoBackup {
@@ -254,4 +255,35 @@ export interface ResumoBackup {
   conclusoes: number
   revisoes: number
   diario: number
+  sessoesFoco: number
+}
+
+/** Sessão de foco; fim nulo é a que está contando, com os minutos até agora. */
+export interface SessaoFoco {
+  id: string
+  atividadeId: string
+  atividadeNome: string
+  areaId: string
+  areaNome: string
+  areaCorTema: string | null
+  inicio: string
+  fim: string | null
+  minutos: number
+}
+
+export interface TempoFoco {
+  inicio: string
+  fim: string
+  totalMinutos: number
+  sessoes: number
+  dias: { data: string; minutos: number }[]
+  porArea: { areaId: string; nome: string; corTema: string | null; minutos: number }[]
+  atividades: {
+    atividadeId: string
+    nome: string
+    areaNome: string
+    areaCorTema: string | null
+    minutos: number
+    sessoes: number
+  }[]
 }

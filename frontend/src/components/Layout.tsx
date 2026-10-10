@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAreas } from '../lib/queries'
 import { useAuth } from '../lib/useAuth'
 import { IconBranches, IconCalendar, IconChart, IconDatabase, IconLogOut, IconSearch, IconSun, IconTree } from './icons'
+import { BarraFoco } from './BarraFoco'
 import { PaletaComandos } from './PaletaComandos'
 
 const NAVEGACAO = [
@@ -125,6 +126,10 @@ export function Layout() {
           <GalhosDaSemana />
         </div>
 
+        <div className="mt-4 empty:hidden">
+          <BarraFoco />
+        </div>
+
         <button
           type="button"
           onClick={sair}
@@ -156,6 +161,9 @@ export function Layout() {
               <IconLogOut className="h-4 w-4" />
             </button>
           </div>
+        </div>
+        <div className="px-3 pb-2 empty:hidden">
+          <BarraFoco compacta />
         </div>
         <nav ref={navCelular} className="flex gap-1 overflow-x-auto px-3 pb-2" aria-label="Principal">
           {NAVEGACAO.map(({ para, rotulo, Icone, fim }) => (

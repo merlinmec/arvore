@@ -2,10 +2,20 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { DiarioDoDia } from '../components/DiarioDoDia'
-import { IconCheck, IconChevronLeft, IconChevronRight, IconFlame, IconInbox, IconX } from '../components/icons'
+import {
+  IconCheck,
+  IconChevronLeft,
+  IconChevronRight,
+  IconFlame,
+  IconInbox,
+  IconPlay,
+  IconStop,
+  IconX,
+} from '../components/icons'
 import { api } from '../lib/api'
 import { corDaArea } from '../lib/cores'
 import { invalidarDerivados, useAlternarConclusao } from '../lib/conclusao'
+import { formatarCronometro, useControleFoco, useCronometro } from '../lib/foco'
 import { lerNumero } from '../lib/numeros'
 import {
   formatarDiaSemana,
@@ -17,7 +27,7 @@ import {
   rotuloRelativo,
   somarDias,
 } from '../lib/datas'
-import { useDia, useHistorico, useRevisao } from '../lib/queries'
+import { useDia, useFocoAtual, useHistorico, useRevisao } from '../lib/queries'
 import type { DiaHoje, ItemHoje } from '../lib/types'
 
 /** Se o item está em dia: feito, ou, num hábito negativo, sem recaída. */
@@ -94,14 +104,53 @@ function TiraDaSemana({ data, hoje, aoEscolher }: { data: string; hoje: string; 
   )
 }
 
+/**
+ * Liga o temporizador de foco na atividade. Na que está contando, vira o cronômetro com o botão de
+ * parar; nas outras, aparece no hover (sempre no celular, que não tem hover).
+ */
+function BotaoFoco({ item }: { item: ItemHoje }) {
+  const { data: sessao } = useFocoAtual()
+  const { iniciar, parar } = useControleFoco()
+  const emFoco = sessao?.atividadeId === item.atividadeId
+  const segundos = useCronometro(emFoco ? sessao.inicio : null)
+
+  if (emFoco) {
+    return (
+      <button
+        type="button"
+        onClick={() => parar.mutate()}
+        aria-label={`Parar o foco em ${item.atividadeNome}`}
+        className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium tabular-nums text-accent-strong transition-colors hover:bg-accent/20"
+      >
+        <IconStop className="h-3.5 w-3.5" />
+        {formatarCronometro(segundos)}
+      </button>
+    )
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => iniciar.mutate(item.atividadeId)}
+      disabled={iniciar.isPending}
+      aria-label={`Iniciar foco em ${item.atividadeNome}`}
+      title={sessao ? `Trocar o foco pra ${item.atividadeNome}` : 'Iniciar foco'}
+      className="shrink-0 rounded-full p-1 text-ink-faint transition-[opacity,color] hover:text-accent-strong focus-visible:opacity-100 group-hover:opacity-100 sm:opacity-0"
+    >
+      <IconPlay className="h-3.5 w-3.5" />
+    </button>
+  )
+}
+
 function ItemAtividade({
   item,
   editavel,
+  podeFocar,
   aoAlternar,
   aoRegistrarValor,
 }: {
   item: ItemHoje
   editavel: boolean
+  podeFocar: boolean
   aoAlternar: () => void
   aoRegistrarValor: (valor: number) => void
 }) {
@@ -158,6 +207,7 @@ function ItemAtividade({
           aoRegistrar={aoRegistrarValor}
         />
       )}
+      {podeFocar && <BotaoFoco item={item} />}
       {item.streakAtual > 0 && (
         <span
           className="flex shrink-0 items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium tabular-nums text-warning"
@@ -464,6 +514,7 @@ export function Hoje() {
                       key={item.atividadeId}
                       item={item}
                       editavel={editavel}
+                      podeFocar={data === hoje}
                       aoAlternar={() => alternar.mutate(item)}
                       aoRegistrarValor={(valor) => registrarValor.mutate({ item, valor })}
                     />
