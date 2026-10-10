@@ -1,16 +1,19 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * Confirmação inline pra exclusões que não dá pra desfazer (ex.: área com tudo dentro). Abre com o
- * foco em "Cancelar", o lado seguro, e Esc também cancela.
+ * Confirmação inline pra ações destrutivas que não dá pra desfazer (excluir uma área com tudo
+ * dentro, restaurar um backup por cima dos dados). Abre com o foco em "Cancelar", o lado seguro, e
+ * Esc também cancela.
  */
 export function ConfirmarExclusao({
   pergunta,
+  rotuloConfirmar = 'Excluir',
   ocupado,
   aoConfirmar,
   aoCancelar,
 }: {
   pergunta: string
+  rotuloConfirmar?: string
   ocupado: boolean
   aoConfirmar: () => void
   aoCancelar: () => void
@@ -46,7 +49,7 @@ export function ConfirmarExclusao({
           disabled={ocupado}
           className="rounded-md bg-danger px-2.5 py-1 font-medium text-canvas transition-colors hover:bg-danger-strong disabled:opacity-50"
         >
-          {ocupado ? 'Excluindo…' : 'Excluir'}
+          {ocupado ? 'Aguarde…' : rotuloConfirmar}
         </button>
       </div>
     </div>
