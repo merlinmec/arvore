@@ -47,6 +47,10 @@ class BackupIntegracaoTest extends IntegracaoTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("nota", "Semana firme")))
                 .andExpect(status().isOk());
+        entityManager.flush();
+        jdbc.update(
+                "insert into sessao_foco (atividade_id, inicio, fim) values (?::uuid, now() - interval '1 hour', now() - interval '30 minutes')",
+                atividadeId);
     }
 
     @Test
@@ -95,7 +99,8 @@ class BackupIntegracaoTest extends IntegracaoTest {
                 .andExpect(jsonPath("$.conclusoes").value(1))
                 .andExpect(jsonPath("$.notas").value(1))
                 .andExpect(jsonPath("$.diario").value(1))
-                .andExpect(jsonPath("$.revisoes").value(1));
+                .andExpect(jsonPath("$.revisoes").value(1))
+                .andExpect(jsonPath("$.sessoesFoco").value(1));
 
         // ids, datas de criação e tags iguais: só o instante de geração muda
         assertThat(semGeradoEm(backup())).isEqualTo(semGeradoEm(original));

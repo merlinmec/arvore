@@ -8,4 +8,5 @@ public record ResumoBackupDTO(
         int atividades,
         int conclusoes,
         int revisoes,
-        int diario) {}
+        int diario,
+        int sessoesFoco) {}
