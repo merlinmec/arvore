@@ -3,6 +3,7 @@ package dev.joaomanoel.arvore.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,7 +58,13 @@ public record BackupDTO(
             Instant atualizadoEm) {}
 
     public record Atividade(
-            UUID id, UUID objetivoId, String nome, Boolean negativa, Instant criadoEm, Instant atualizadoEm) {}
+            UUID id,
+            UUID objetivoId,
+            String nome,
+            Boolean negativa,
+            LocalTime lembrete,
+            Instant criadoEm,
+            Instant atualizadoEm) {}
 
     public record Agenda(
             UUID id, UUID atividadeId, String diaSemana, LocalDate vigenteDe, LocalDate vigenteAte, Instant criadoEm) {}

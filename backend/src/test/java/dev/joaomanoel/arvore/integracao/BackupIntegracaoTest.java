@@ -38,6 +38,10 @@ class BackupIntegracaoTest extends IntegracaoTest {
                 .andExpect(status().isCreated());
         mvc.perform(autenticado(post("/api/atividades/" + atividadeId + "/conclusao").param("valor", "5.5")))
                 .andExpect(status().isCreated());
+        mvc.perform(autenticado(put("/api/atividades/" + atividadeId + "/lembrete"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("horario", "06:45")))
+                .andExpect(status().isNoContent());
         criar("/api/areas/" + saudeId + "/notas", "{\"titulo\":\"Treinos\",\"corpo\":\"intervalado\",\"tags\":[\"corrida\"]}");
         mvc.perform(autenticado(put("/api/diario/" + hoje))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -107,7 +111,8 @@ class BackupIntegracaoTest extends IntegracaoTest {
         mvc.perform(autenticado(get("/api/hoje")))
                 .andExpect(jsonPath("$.itens", hasSize(1)))
                 .andExpect(jsonPath("$.itens[0].concluido").value(true))
-                .andExpect(jsonPath("$.itens[0].valor").value(5.5));
+                .andExpect(jsonPath("$.itens[0].valor").value(5.5))
+                .andExpect(jsonPath("$.itens[0].lembrete").value(org.hamcrest.Matchers.startsWith("06:45")));
         mvc.perform(autenticado(get("/api/tags"))).andExpect(jsonPath("$[0]").value("corrida"));
     }
 
