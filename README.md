@@ -13,6 +13,7 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 - **Revisão semanal** guiada: como foi a semana, o que escapou, uma nota e o ajuste da grade da próxima
 - **Notas** em Markdown com tags que cruzam áreas
 - **Dados**: CSV das conclusões pra planilha, backup completo em JSON e restauração
+- **Lembretes**: horário por atividade, com notificação do navegador se ainda não foi feita (com o app aberto)
 - **PWA**: instalável no desktop e no celular, e a tela Hoje abre sem rede com a última versão salva
 - **Temporizador de foco**: ▶ numa atividade começa a contar, e o Painel mostra o tempo por área e atividade
 - **Paleta de comandos** (`Ctrl+K`): ir pra qualquer tela ou área e marcar as atividades de hoje pelo teclado; na tela Hoje, `←`/`→` trocam o dia
@@ -115,6 +116,7 @@ Os testes unitários ficam em `util/`. Os de integração (`integracao/`) sobem 
 | `GET`/`PUT`/`DELETE` | `/api/diario/{data}` | Diário do dia (`{"humor", "energia", "nota"}`, níveis 1–5). O `PUT` substitui o registro inteiro, e tudo vazio apaga; dia futuro dá 400. `GET /api/diario?inicio=&fim=` lista o período |
 | `GET` | `/api/insights/diario?dias=30&areaId=` | Taxa de conclusão por nível de humor e de energia registrados no diário |
 | `POST` | `/api/foco/iniciar` · `/api/foco/parar` | Começa (`{"atividadeId"}`, encerrando a anterior) ou para a sessão de foco; `GET /api/foco/atual` devolve a que está contando (204 se nenhuma) e `GET /api/foco?inicio=&fim=` lista as sessões |
+| `PUT`/`DELETE` | `/api/atividades/{id}/lembrete` | Define (`{"horario": "07:30"}`) ou remove o lembrete diário da atividade |
 | `GET` | `/api/insights/tempo?dias=30&areaId=` | Tempo de foco do período: total, dia a dia, por área e por atividade |
 | `GET` | `/api/dados/conclusoes.csv?inicio=&fim=` | CSV das conclusões (padrão: tudo até hoje), com `;`, vírgula decimal e BOM pro Excel |
 | `GET`/`PUT` | `/api/dados/backup` | Baixa o backup completo em JSON / substitui todos os dados por um backup (inconsistente dá 400 e nada muda) |

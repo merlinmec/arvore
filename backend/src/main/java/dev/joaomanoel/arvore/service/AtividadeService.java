@@ -6,9 +6,11 @@ import dev.joaomanoel.arvore.entity.Atividade;
 import dev.joaomanoel.arvore.exception.NaoEncontradoException;
 import dev.joaomanoel.arvore.repository.AtividadeRepository;
 import dev.joaomanoel.arvore.repository.ObjetivoRepository;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AtividadeService {
@@ -20,6 +22,17 @@ public class AtividadeService {
             AtividadeRepository atividadeRepository, ObjetivoRepository objetivoRepository) {
         this.atividadeRepository = atividadeRepository;
         this.objetivoRepository = objetivoRepository;
+    }
+
+    /** Define (ou, com null, remove) o horário do lembrete da atividade. */
+    @Transactional
+    public void definirLembrete(UUID id, LocalTime horario) {
+        Atividade atividade =
+                atividadeRepository
+                        .findById(id)
+                        .orElseThrow(() -> new NaoEncontradoException("Atividade não encontrada"));
+        atividade.setLembrete(horario);
+        atividadeRepository.save(atividade);
     }
 
     public void excluir(UUID id) {
@@ -46,6 +59,7 @@ public class AtividadeService {
                 atividade.getNome(),
                 List.of(),
                 null,
-                atividade.isNegativa());
+                atividade.isNegativa(),
+                atividade.getLembrete());
     }
 }

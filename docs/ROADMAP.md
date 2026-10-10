@@ -72,16 +72,16 @@ Inspiração: Loop Habit Tracker, Streaks, "Goal-Tab".
 - [x] **Hábito negativo** (09/10/2026): "não fumar", criado com `negativa: true`. Vale todo dia desde a criação, sem grade, e o registro é a recaída. Dia sem recaída até hoje conta como cumprido (hoje vale enquanto não houver recaída), dia futuro fica planejado e não cumprido, e a sequência é de dias limpos
 - [x] **Força do hábito** (09/10/2026), pontuação com decaimento estilo Loop: média móvel exponencial (0–100) das ocorrências planejadas, com meia-vida de 13 ocorrências. Uma falha isolada depois de meses de consistência custa uns 5 pontos, enquanto a sequência zera. Aparece no ranking de atividades do Painel
 
-### Fase 3 — Rituais
+### Fase 3 — Rituais ✅ (10/10/2026)
 
 Inspiração: Sunsama, Clockify, Habi.
 
 - [x] **Revisão semanal guiada** (09/10/2026): tela Revisão em 4 passos — como foi a semana (taxa contra a anterior e os dias), o que escapou (dias perdidos por atividade, recaídas à parte), uma nota guardada por semana e o ajuste da grade. Domingo, a tela Hoje convida pra revisar enquanto a semana não tem nota. O ajuste da grade vale a partir de hoje, como qualquer mudança de grade (vigência futura ficou de fora)
 - [x] **Diário do dia** (10/10/2026): humor e energia (1–5) e uma nota curta por data, no fim da tela Hoje. Os níveis salvam no clique e a nota ao sair do campo; tudo vazio apaga o registro. No Painel, um bloco mostra a taxa de conclusão por nível de humor e de energia no período (com o filtro de área), e compara os dias de nível alto (4–5) com os de nível baixo (1–2)
 - [x] **Temporizador de foco** (10/10/2026): botão ▶ em cada atividade da tela Hoje (e na paleta), uma sessão por vez (começar outra encerra a anterior), barra "Em foco" com o cronômetro em qualquer tela, e no Painel o tempo do período por área e por atividade, estilo Clockify. Sessão que atravessa a meia-noite se divide entre os dias no fuso do app; sessão esquecida aberta é cortada em 12 h; parada com menos de 1 minuto é descartada como clique sem querer. As regras moram em `util/TempoCalculo`, com teste, e as sessões entram no backup
-- [ ] **Lembretes** por atividade (notificação do navegador/PWA)
+- [x] **Lembretes** (10/10/2026): horário opcional por atividade, definido no sino da linha da atividade (o primeiro lembrete pede a permissão de notificação). No horário, se a atividade está planejada pra hoje e ainda não foi feita, sai uma notificação pelo service worker, e clicar nela traz o app pra frente. Cada lembrete avisa uma vez por dia, e quem abre o app até uma hora depois do horário ainda recebe. **Limitação:** sem servidor de push, o aviso só sai com o app aberto (numa aba ou instalado); push de verdade exigiria Web Push com chaves VAPID e um agendador no backend
 
-### Fase 4 — Plataforma e qualidade
+### Fase 4 — Plataforma e qualidade ✅ (10/10/2026)
 
 - [x] **Testes de integração e CI** (09/10/2026): Testcontainers com Postgres real, passando pelo login JWT (autenticação e fluxo da tela Hoje); GitHub Actions roda os testes do backend, lint e build do frontend e o build das imagens. Em 10/10/2026 ganharam Painel (resumo, ranking, filtro com subáreas, histórico), Áreas (árvore, progresso, edição, exclusão em cascata) e agenda (grade versionada, meta semanal). O helper `recuarCriacao` leva a criação e as grades pro passado via JDBC, já que a API só cria no presente
 - [x] **`docker-compose.yml`** (09/10/2026) com Postgres, backend e frontend (nginx servindo o build e repassando `/api`)

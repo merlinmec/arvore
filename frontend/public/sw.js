@@ -40,6 +40,18 @@ self.addEventListener('activate', (evento) => {
   )
 })
 
+// clicar num lembrete traz o app pra frente (ou abre, se estava fechado)
+self.addEventListener('notificationclick', (evento) => {
+  evento.notification.close()
+  const destino = evento.notification.data?.url ?? '/'
+  evento.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((janelas) => {
+      const aberta = janelas.find((janela) => new URL(janela.url).origin === self.location.origin)
+      return aberta ? aberta.focus() : self.clients.openWindow(destino)
+    }),
+  )
+})
+
 // o app pede pra esquecer os dados da API ao sair da conta
 self.addEventListener('message', (evento) => {
   if (evento.data === 'limpar-api') evento.waitUntil(caches.delete(CACHE_API))

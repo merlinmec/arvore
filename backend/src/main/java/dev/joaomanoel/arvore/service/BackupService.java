@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -145,6 +146,7 @@ public class BackupService {
                                 uuid(linha, "objetivo_id"),
                                 linha.getString("nome"),
                                 linha.getBoolean("negativa"),
+                                linha.getObject("lembrete", LocalTime.class),
                                 instante(linha, "criado_em"),
                                 instante(linha, "atualizado_em"))),
                 jdbc.query(
@@ -254,10 +256,16 @@ public class BackupService {
                         o.metaValor(), o.metaUnidade(), ts(o.criadoEm()), ts(o.atualizadoEm())
                     });
             inserir(
-                    "insert into atividade (id, objetivo_id, nome, negativa, criado_em, atualizado_em) values (?, ?, ?, ?, ?, ?)",
+                    "insert into atividade (id, objetivo_id, nome, negativa, lembrete, criado_em, atualizado_em) values (?, ?, ?, ?, ?, ?, ?)",
                     atividades,
                     a -> new Object[] {
-                        a.id(), a.objetivoId(), a.nome(), Boolean.TRUE.equals(a.negativa()), ts(a.criadoEm()), ts(a.atualizadoEm())
+                        a.id(),
+                        a.objetivoId(),
+                        a.nome(),
+                        Boolean.TRUE.equals(a.negativa()),
+                        a.lembrete(),
+                        ts(a.criadoEm()),
+                        ts(a.atualizadoEm())
                     });
             inserir(
                     "insert into agenda_semanal (id, atividade_id, dia_semana, vigente_de, vigente_ate, criado_em) values (?, ?, ?, ?, ?, ?)",

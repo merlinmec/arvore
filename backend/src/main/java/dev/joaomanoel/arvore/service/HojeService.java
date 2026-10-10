@@ -119,7 +119,8 @@ public class HojeService {
                 semana == null ? null : semana.meta(),
                 semana == null ? null : semana.feitas(),
                 objetivo.getMetaUnidade(),
-                valor);
+                valor,
+                atividade.getLembrete());
     }
 
     private static boolean podeEntrarNoDia(Rotina rotina, LocalDate data) {
