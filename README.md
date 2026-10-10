@@ -13,6 +13,7 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 - **Revisão semanal** guiada: como foi a semana, o que escapou, uma nota e o ajuste da grade da próxima
 - **Notas** em Markdown com tags que cruzam áreas
 - **Dados**: CSV das conclusões pra planilha, backup completo em JSON e restauração
+- **Paleta de comandos** (`Ctrl+K`): ir pra qualquer tela ou área e marcar as atividades de hoje pelo teclado; na tela Hoje, `←`/`→` trocam o dia
 - **Exclusão com desfazer**: atividade, objetivo e nota somem na hora, com alguns segundos pra desfazer (ou `Ctrl+Z`)
 
 Direção do produto, diretrizes e próximas fases: [`docs/ROADMAP.md`](docs/ROADMAP.md).

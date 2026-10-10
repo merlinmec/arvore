@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { DiarioDoDia } from '../components/DiarioDoDia'
 import { IconCheck, IconChevronLeft, IconChevronRight, IconFlame, IconInbox, IconX } from '../components/icons'
 import { api } from '../lib/api'
 import { corDaArea } from '../lib/cores'
+import { invalidarDerivados, useAlternarConclusao } from '../lib/conclusao'
 import { lerNumero } from '../lib/numeros'
 import {
   formatarDiaSemana,
@@ -293,38 +294,22 @@ export function Hoje() {
     setParametros(iso === hoje ? {} : { data: iso }, { replace: true })
   }
 
-  const alternar = useMutation({
-    mutationFn: (item: ItemHoje) =>
-      item.concluido
-        ? api.delete(`/atividades/${item.atividadeId}/conclusao`, { params: { data } })
-        : api.post(`/atividades/${item.atividadeId}/conclusao`, null, { params: { data } }),
-    // marca na hora e desfaz se a API recusar: marcar precisa parecer instantâneo
-    onMutate: async (item) => {
-      await queryClient.cancelQueries({ queryKey: ['hoje', data] })
-      const anterior = queryClient.getQueryData<DiaHoje>(['hoje', data])
-      queryClient.setQueryData<DiaHoje>(['hoje', data], (atual) =>
-        atual && {
-          ...atual,
-          itens: atual.itens.map((i) =>
-            i.atividadeId === item.atividadeId
-              ? {
-                  ...i,
-                  concluido: !i.concluido,
-                  // recaída zera a sequência na hora; desfazer espera o servidor recalcular
-                  streakAtual: i.negativa && !i.concluido ? 0 : i.streakAtual,
-                  feitasNaSemana: i.feitasNaSemana === null ? null : i.feitasNaSemana + (i.concluido ? -1 : 1),
-                }
-              : i,
-          ),
-        },
-      )
-      return { anterior }
-    },
-    onError: (_erro, _item, contexto) => {
-      if (contexto?.anterior) queryClient.setQueryData(['hoje', data], contexto.anterior)
-    },
-    onSettled: invalidarDerivados,
+  // ← e → trocam de dia, H volta pra hoje (fora de campos de texto)
+  useEffect(() => {
+    function aoTeclar(evento: KeyboardEvent) {
+      if (evento.ctrlKey || evento.metaKey || evento.altKey || evento.defaultPrevented) return
+      if ((evento.target as HTMLElement | null)?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')) return
+      if (evento.key === 'ArrowLeft') irPara(somarDias(data, -1))
+      else if (evento.key === 'ArrowRight') irPara(somarDias(data, 1))
+      else if (evento.key.toLowerCase() === 'h') irPara(hoje)
+      else return
+      evento.preventDefault()
+    }
+    window.addEventListener('keydown', aoTeclar)
+    return () => window.removeEventListener('keydown', aoTeclar)
   })
+
+  const alternar = useAlternarConclusao(data)
 
   // registrar um valor ("5 km") também conclui a atividade no dia, se ainda não estava
   const registrarValor = useMutation({
@@ -354,17 +339,8 @@ export function Hoje() {
     onError: (_erro, _variaveis, contexto) => {
       if (contexto?.anterior) queryClient.setQueryData(['hoje', data], contexto.anterior)
     },
-    onSettled: invalidarDerivados,
+    onSettled: () => invalidarDerivados(queryClient),
   })
-
-  async function invalidarDerivados() {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['hoje'] }),
-      queryClient.invalidateQueries({ queryKey: ['insights'] }),
-      queryClient.invalidateQueries({ queryKey: ['areas'] }),
-      queryClient.invalidateQueries({ queryKey: ['objetivos'] }),
-    ])
-  }
 
   const itens = useMemo(() => dia?.itens ?? [], [dia])
   const concluidas = itens.filter(cumprido).length
