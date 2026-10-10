@@ -13,6 +13,7 @@ import {
   type StatusObjetivo,
 } from '../lib/types'
 import { GradeAtividade } from './GradeAtividade'
+import { LembreteAtividade } from './LembreteAtividade'
 import { IconCalendar, IconPlus, IconTrash } from './icons'
 
 const STATUS: Record<StatusObjetivo, { rotulo: string; estilo: string }> = {
@@ -178,6 +179,7 @@ function AtividadeItem({ atividade, areaId, cor }: { atividade: Atividade; areaI
     <li className="group flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5">
       <p className="min-w-0 flex-1 truncate text-sm text-ink">{atividade.nome}</p>
       <div className="flex items-center gap-1.5">
+        {!atividade.negativa && <LembreteAtividade atividade={atividade} areaId={areaId} />}
         <GradeAtividade atividade={atividade} cor={cor} />
         <button
           type="button"
