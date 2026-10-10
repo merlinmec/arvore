@@ -15,6 +15,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function sair() {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
+    // a cópia offline das respostas da API não deve sobreviver ao logout
+    navigator.serviceWorker?.controller?.postMessage('limpar-api')
     setToken(null)
   }
 

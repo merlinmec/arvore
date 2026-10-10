@@ -13,6 +13,7 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 - **Revisão semanal** guiada: como foi a semana, o que escapou, uma nota e o ajuste da grade da próxima
 - **Notas** em Markdown com tags que cruzam áreas
 - **Dados**: CSV das conclusões pra planilha, backup completo em JSON e restauração
+- **PWA**: instalável no desktop e no celular, e a tela Hoje abre sem rede com a última versão salva
 - **Temporizador de foco**: ▶ numa atividade começa a contar, e o Painel mostra o tempo por área e atividade
 - **Paleta de comandos** (`Ctrl+K`): ir pra qualquer tela ou área e marcar as atividades de hoje pelo teclado; na tela Hoje, `←`/`→` trocam o dia
 - **Exclusão com desfazer**: atividade, objetivo e nota somem na hora, com alguns segundos pra desfazer (ou `Ctrl+Z`)
