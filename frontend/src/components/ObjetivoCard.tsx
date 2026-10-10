@@ -4,6 +4,7 @@ import { api } from '../lib/api'
 import { corDaArea } from '../lib/cores'
 import { diferencaEmDias, formatarCurto, hojeIso } from '../lib/datas'
 import { formatarNumero, lerNumero } from '../lib/numeros'
+import { useDesfazer } from '../lib/useDesfazer'
 import {
   type Atividade,
   type Meta,
@@ -154,6 +155,7 @@ function MetaForm({
 
 function AtividadeItem({ atividade, areaId, cor }: { atividade: Atividade; areaId: string; cor: string }) {
   const queryClient = useQueryClient()
+  const { excluir, pendente } = useDesfazer()
 
   async function invalidar() {
     await Promise.all([
@@ -170,6 +172,8 @@ function AtividadeItem({ atividade, areaId, cor }: { atividade: Atividade; areaI
     onSuccess: invalidar,
   })
 
+  if (pendente(atividade.id)) return null
+
   return (
     <li className="group flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5">
       <p className="min-w-0 flex-1 truncate text-sm text-ink">{atividade.nome}</p>
@@ -177,11 +181,13 @@ function AtividadeItem({ atividade, areaId, cor }: { atividade: Atividade; areaI
         <GradeAtividade atividade={atividade} cor={cor} />
         <button
           type="button"
-          onClick={() => {
-            if (window.confirm(`Excluir a atividade "${atividade.nome}"? O histórico dela some junto.`)) {
-              excluirAtividade.mutate()
-            }
-          }}
+          onClick={() =>
+            excluir({
+              id: atividade.id,
+              mensagem: `Atividade "${atividade.nome}" excluída`,
+              executar: () => excluirAtividade.mutateAsync(),
+            })
+          }
           aria-label={`Excluir atividade ${atividade.nome}`}
           className="ml-1 rounded p-1 text-ink-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-danger focus-visible:opacity-100"
         >
@@ -197,6 +203,7 @@ export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtivi
   const [negativa, setNegativa] = useState(false)
   const [editandoMeta, setEditandoMeta] = useState(false)
   const queryClient = useQueryClient()
+  const { excluir, pendente } = useDesfazer()
   const cor = corDaArea(corArea)
   const ativo = objetivo.status === 'ATIVO'
   const { progresso } = objetivo
@@ -256,6 +263,8 @@ export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtivi
     criarAtividade.mutate()
   }
 
+  if (pendente(objetivo.id)) return null
+
   return (
     <article
       className={`rounded-xl border border-line bg-surface transition-opacity ${ativo ? '' : 'opacity-70 hover:opacity-100'}`}
@@ -278,11 +287,13 @@ export function ObjetivoCard({ objetivo, corArea }: { objetivo: ObjetivoComAtivi
             </select>
             <button
               type="button"
-              onClick={() => {
-                if (window.confirm(`Excluir o objetivo "${objetivo.descricao}" e suas atividades?`)) {
-                  excluirObjetivo.mutate()
-                }
-              }}
+              onClick={() =>
+                excluir({
+                  id: objetivo.id,
+                  mensagem: `Objetivo "${objetivo.descricao}" excluído`,
+                  executar: () => excluirObjetivo.mutateAsync(),
+                })
+              }
               aria-label="Excluir objetivo"
               className="rounded p-1.5 text-ink-faint transition-colors hover:text-danger"
             >

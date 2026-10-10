@@ -177,7 +177,18 @@ function taxaDosNiveis(niveis: NivelConsistencia[], de: number, ate: number): nu
   return planejado > 0 ? Math.round((concluido / planejado) * 100) : null
 }
 
-function BarrasPorNivel({ titulo, niveis }: { titulo: string; niveis: NivelConsistencia[] }) {
+function BarrasPorNivel({
+  titulo,
+  niveis,
+  alto,
+  baixo,
+}: {
+  titulo: string
+  niveis: NivelConsistencia[]
+  /** O adjetivo concorda com o substantivo: humor alto, energia alta. */
+  alto: string
+  baixo: string
+}) {
   const baixa = taxaDosNiveis(niveis, 1, 2)
   const alta = taxaDosNiveis(niveis, 4, 5)
   return (
@@ -195,9 +206,13 @@ function BarrasPorNivel({ titulo, niveis }: { titulo: string; niveis: NivelConsi
             title={`${nivel.dias} ${nivel.dias === 1 ? 'dia' : 'dias'} com ${titulo.toLowerCase()} ${nivel.nivel}`}
           >
             <span className="text-[11px] tabular-nums text-ink-faint transition-colors group-hover:text-ink">
-              {nivel.taxa === null ? '' : `${nivel.taxa}%`}
+              {nivel.dias === 0 ? '—' : nivel.taxa === null ? '' : `${nivel.taxa}%`}
             </span>
-            <div className="relative w-full max-w-8 flex-1 overflow-hidden rounded-[4px] bg-surface-3">
+            <div
+              className={`relative w-full max-w-8 flex-1 overflow-hidden rounded-[4px] ${
+                nivel.dias === 0 ? 'bg-surface-2' : 'bg-surface-3'
+              }`}
+            >
               <div
                 className="absolute inset-x-0 bottom-0 rounded-[4px] transition-[height] duration-500 ease-out"
                 style={{
@@ -212,7 +227,7 @@ function BarrasPorNivel({ titulo, niveis }: { titulo: string; niveis: NivelConsi
       </div>
       {baixa !== null && alta !== null && baixa !== alta && (
         <p className="text-xs text-ink-muted">
-          Com {titulo.toLowerCase()} alta você cumpre <span className="tabular-nums text-ink">{alta}%</span>; baixa,{' '}
+          Com {titulo.toLowerCase()} {alto} você cumpre <span className="tabular-nums text-ink">{alta}%</span>; {baixo},{' '}
           <span className="tabular-nums text-ink">{baixa}%</span>.
         </p>
       )}
@@ -235,8 +250,8 @@ export function DiarioXConsistencia({ dados }: { dados: DiarioConsistencia }) {
   }
   return (
     <div className="flex flex-col gap-6 sm:flex-row">
-      <BarrasPorNivel titulo="Humor" niveis={dados.porHumor} />
-      <BarrasPorNivel titulo="Energia" niveis={dados.porEnergia} />
+      <BarrasPorNivel titulo="Humor" niveis={dados.porHumor} alto="alto" baixo="baixo" />
+      <BarrasPorNivel titulo="Energia" niveis={dados.porEnergia} alto="alta" baixo="baixa" />
     </div>
   )
 }

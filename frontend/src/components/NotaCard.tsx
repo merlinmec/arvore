@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
+import { useDesfazer } from '../lib/useDesfazer'
 import type { Nota } from '../lib/types'
 import { IconPencil, IconTrash } from './icons'
 import { MarkdownContent } from './MarkdownContent'
@@ -12,6 +13,7 @@ export function NotaCard({ nota }: { nota: Nota }) {
   const [corpo, setCorpo] = useState(nota.corpo)
   const [tags, setTags] = useState(nota.tags.join(', '))
   const queryClient = useQueryClient()
+  const { excluir, pendente } = useDesfazer()
 
   const excluirNota = useMutation({
     mutationFn: () => api.delete(`/areas/${nota.areaId}/notas/${nota.id}`),
@@ -40,6 +42,8 @@ export function NotaCard({ nota }: { nota: Nota }) {
     evento.preventDefault()
     editarNota.mutate()
   }
+
+  if (pendente(nota.id)) return null
 
   if (editando) {
     return (
@@ -97,11 +101,13 @@ export function NotaCard({ nota }: { nota: Nota }) {
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (window.confirm(`Excluir a nota "${nota.titulo}"?`)) {
-                excluirNota.mutate()
-              }
-            }}
+            onClick={() =>
+              excluir({
+                id: nota.id,
+                mensagem: `Nota "${nota.titulo}" excluída`,
+                executar: () => excluirNota.mutateAsync(),
+              })
+            }
             aria-label="Excluir nota"
             className="rounded p-1.5 text-ink-faint hover:text-danger"
           >

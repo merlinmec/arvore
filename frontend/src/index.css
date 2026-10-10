@@ -132,6 +132,21 @@ input[type='date']::-webkit-calendar-picker-indicator {
   animation: draw-check 0.32s var(--ease-out-expo) both;
 }
 
+/* a barra do aviso de desfazer encolhe durante o prazo pra desfazer */
+@keyframes prazo-encolhe {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.prazo-desfazer {
+  transform-origin: left;
+  animation: prazo-encolhe linear both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-rise,
   .check-draw path {
