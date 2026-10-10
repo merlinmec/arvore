@@ -99,9 +99,12 @@ Inspiração: Sunsama, Clockify, Habi.
 
 ## 5. Dívida técnica conhecida
 
-| Onde | Problema | Correção sugerida |
-|---|---|---|
-| Tabela `tag` | Tag que ficou sem nenhuma nota continua no banco e aparece em `GET /api/tags` | Apagar tags órfãs ao editar/excluir nota, ou listar só as que têm nota |
+Nenhuma em aberto no momento.
+
+### Resolvida (10/10/2026)
+
+- **Tags órfãs:** tag que ficava sem nenhuma nota continuava no banco e aparecia em `GET /api/tags`. Agora a lista mostra só as tags em uso, e editar ou excluir nota (ou excluir a área, que leva as notas em cascata) apaga as tags que ficaram sem nota.
+- **Subárea com pai inexistente** dava 500 em produção (a FK só falhava no commit); agora dá 404. Achado pelos testes de integração das Áreas.
 
 ### Resolvida (29/09/2026)
 
