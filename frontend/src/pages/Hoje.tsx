@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { DiarioDoDia } from '../components/DiarioDoDia'
 import {
+  IconBell,
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
@@ -16,6 +17,7 @@ import { api } from '../lib/api'
 import { corDaArea } from '../lib/cores'
 import { invalidarDerivados, useAlternarConclusao } from '../lib/conclusao'
 import { formatarCronometro, useControleFoco, useCronometro } from '../lib/foco'
+import { horario } from '../lib/lembretes'
 import { lerNumero } from '../lib/numeros'
 import {
   formatarDiaSemana,
@@ -187,6 +189,13 @@ function ItemAtividade({
         </p>
         <p className="mt-0.5 truncate text-xs text-ink-faint">
           {item.objetivoDescricao}
+          {item.lembrete && (
+            <span className="tabular-nums">
+              {' · '}
+              <IconBell className="-mt-0.5 inline h-3 w-3" aria-hidden />
+              <span className="sr-only">lembrete às</span> {horario(item.lembrete)}
+            </span>
+          )}
           {item.metaSemanal !== null && (
             <span className="tabular-nums">
               {' · '}

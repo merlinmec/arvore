@@ -1,6 +1,7 @@
 package dev.joaomanoel.arvore.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 import java.util.UUID;
 
 public record ItemHojeDTO(
@@ -20,4 +21,6 @@ public record ItemHojeDTO(
         Integer feitasNaSemana,
         // Só quando o objetivo tem meta quantitativa: a unidade e o valor registrado nesse dia.
         String metaUnidade,
-        BigDecimal valor) {}
+        BigDecimal valor,
+        // horário do lembrete, se a atividade tiver um
+        LocalTime lembrete) {}

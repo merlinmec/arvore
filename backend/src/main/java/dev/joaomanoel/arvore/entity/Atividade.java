@@ -2,6 +2,7 @@ package dev.joaomanoel.arvore.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.time.LocalTime;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,9 @@ public class Atividade {
     /** Hábito negativo ("não fumar"): vale todo dia, e cada conclusão registrada é uma recaída. */
     @Column(nullable = false, updatable = false)
     private boolean negativa;
+
+    /** Horário do lembrete do dia, se houver. */
+    private LocalTime lembrete;
 
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
