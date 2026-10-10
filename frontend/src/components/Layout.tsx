@@ -1,13 +1,15 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAreas } from '../lib/queries'
 import { useAuth } from '../lib/useAuth'
-import { IconBranches, IconCalendar, IconChart, IconLogOut, IconSun, IconTree } from './icons'
+import { IconBranches, IconCalendar, IconChart, IconDatabase, IconLogOut, IconSun, IconTree } from './icons'
 
 const NAVEGACAO = [
   { para: '/', rotulo: 'Hoje', Icone: IconSun, fim: true },
   { para: '/painel', rotulo: 'Painel', Icone: IconChart, fim: false },
   { para: '/revisao', rotulo: 'Revisão', Icone: IconCalendar, fim: false },
   { para: '/areas', rotulo: 'Áreas', Icone: IconBranches, fim: true },
+  { para: '/dados', rotulo: 'Dados', Icone: IconDatabase, fim: true },
 ]
 
 function classeItem({ isActive }: { isActive: boolean }) {
@@ -59,6 +61,13 @@ function GalhosDaSemana() {
 
 export function Layout() {
   const { sair } = useAuth()
+  const { pathname } = useLocation()
+  const navCelular = useRef<HTMLElement>(null)
+
+  // no celular o nav rola na horizontal: traz o item da página atual pra dentro da tela
+  useEffect(() => {
+    navCelular.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [pathname])
 
   return (
     <div className="min-h-screen bg-canvas text-ink lg:grid lg:grid-cols-[15rem_1fr]">
@@ -102,9 +111,9 @@ export function Layout() {
             <IconLogOut className="h-4 w-4" />
           </button>
         </div>
-        <nav className="flex gap-1 px-3 pb-2" aria-label="Principal">
+        <nav ref={navCelular} className="flex gap-1 overflow-x-auto px-3 pb-2" aria-label="Principal">
           {NAVEGACAO.map(({ para, rotulo, Icone, fim }) => (
-            <NavLink key={para} to={para} end={fim} className={classeItem}>
+            <NavLink key={para} to={para} end={fim} className={(estado) => `${classeItem(estado)} shrink-0`}>
               <Icone className="h-4 w-4" />
               {rotulo}
             </NavLink>
