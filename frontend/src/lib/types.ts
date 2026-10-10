@@ -45,6 +45,8 @@ export interface Atividade {
   vezesPorSemana: number | null
   /** Hábito negativo ("não fumar"): vale todo dia, sem grade, e o registro é a recaída. */
   negativa: boolean
+  /** Horário do lembrete diário ("07:30" ou "07:30:00"), se houver. */
+  lembrete: string | null
 }
 
 export type SituacaoMeta = 'CONCLUIDA' | 'ADIANTADA' | 'NO_RITMO' | 'ATRASADA' | 'VENCIDA' | 'SEM_PRAZO'
@@ -110,6 +112,8 @@ export interface ItemHoje {
   /** Só quando o objetivo tem meta quantitativa: a unidade e o valor registrado nesse dia. */
   metaUnidade: string | null
   valor: number | null
+  /** Horário do lembrete ("07:30" ou "07:30:00"), se houver. */
+  lembrete: string | null
 }
 
 export interface DiaHoje {

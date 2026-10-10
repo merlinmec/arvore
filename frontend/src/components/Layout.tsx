@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useLembretes } from '../lib/lembretes'
 import { useAreas } from '../lib/queries'
 import { useAuth } from '../lib/useAuth'
 import { IconBranches, IconCalendar, IconChart, IconDatabase, IconLogOut, IconSearch, IconSun, IconTree } from './icons'
@@ -67,6 +68,7 @@ export function Layout() {
   const { pathname } = useLocation()
   const navCelular = useRef<HTMLElement>(null)
   const [paletaAberta, setPaletaAberta] = useState(false)
+  useLembretes()
   const focoAnterior = useRef<HTMLElement | null>(null)
 
   function abrirPaleta() {
