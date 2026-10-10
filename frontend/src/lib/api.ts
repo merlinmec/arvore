@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { registrarResposta } from './conexao'
 
 export const TOKEN_STORAGE_KEY = 'arvore.token'
 
@@ -15,8 +16,13 @@ api.interceptors.request.use((config) => {
 })
 
 api.interceptors.response.use(
-  (resposta) => resposta,
+  (resposta) => {
+    registrarResposta(resposta.headers['x-arvore-copia'] === '1')
+    return resposta
+  },
   (erro) => {
+    // sem resposta nenhuma é falha de rede: o servidor não foi alcançado
+    if (!erro.response) registrarResposta(true)
     if (erro.response?.status === 401) {
       localStorage.removeItem(TOKEN_STORAGE_KEY)
       if (window.location.pathname !== '/login') {

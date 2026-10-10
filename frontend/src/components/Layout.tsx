@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAreas } from '../lib/queries'
 import { useAuth } from '../lib/useAuth'
 import { IconBranches, IconCalendar, IconChart, IconDatabase, IconLogOut, IconSearch, IconSun, IconTree } from './icons'
+import { AvisoOffline } from './AvisoOffline'
 import { BarraFoco } from './BarraFoco'
 import { PaletaComandos } from './PaletaComandos'
 
@@ -176,6 +177,7 @@ export function Layout() {
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+        <AvisoOffline />
         <Outlet />
       </main>
 
