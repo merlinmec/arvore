@@ -1,12 +1,17 @@
 import type { ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Heatmap } from '../components/graficos/Heatmap'
-import { ConsistenciaPorArea, PadraoSemanal, TabelaAtividades } from '../components/graficos/PainelBlocos'
+import {
+  ConsistenciaPorArea,
+  DiarioXConsistencia,
+  PadraoSemanal,
+  TabelaAtividades,
+} from '../components/graficos/PainelBlocos'
 import { SerieDiaria } from '../components/graficos/SerieDiaria'
 import { IconChart, IconFlame, IconTrendDown, IconTrendUp } from '../components/icons'
 import { achatarArvore } from '../lib/arvore'
 import { formatarCurto } from '../lib/datas'
-import { useAreas, useHistorico, useResumo } from '../lib/queries'
+import { useAreas, useDiarioConsistencia, useHistorico, useResumo } from '../lib/queries'
 
 const PERIODOS = [
   { dias: 7, rotulo: '7 dias' },
@@ -57,6 +62,7 @@ export function Painel() {
   const { data: areas } = useAreas()
   const { data: resumo, isLoading, isError } = useResumo(dias, areaId)
   const { data: historico } = useHistorico({ areaId })
+  const { data: diario } = useDiarioConsistencia(dias, areaId)
 
   function atualizar(chave: string, valor: string | null) {
     const proximos = new URLSearchParams(parametros)
@@ -205,6 +211,12 @@ export function Painel() {
               <TabelaAtividades atividades={resumo.atividades} />
             </Bloco>
           </div>
+
+          {diario && (
+            <Bloco titulo="Diário e consistência" detalhe={`${diario.diasRegistrados} dias registrados no período`}>
+              <DiarioXConsistencia dados={diario} />
+            </Bloco>
+          )}
         </>
       )}
     </div>
