@@ -209,3 +209,26 @@ export interface Revisao {
   nota: string
   atualizadoEm: string
 }
+
+/** Diário de uma data; dia sem registro vem com tudo nulo. */
+export interface Diario {
+  data: string
+  humor: number | null
+  energia: number | null
+  nota: string | null
+}
+
+export interface NivelConsistencia {
+  nivel: number
+  dias: number
+  planejado: number
+  concluido: number
+  taxa: number | null
+}
+
+/** Taxa de conclusão por nível (1 a 5) de humor e de energia registrados no diário. */
+export interface DiarioConsistencia {
+  diasRegistrados: number
+  porHumor: NivelConsistencia[]
+  porEnergia: NivelConsistencia[]
+}

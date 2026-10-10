@@ -1,6 +1,13 @@
 import { Link } from 'react-router-dom'
 import { corDaArea, degrauDaTaxa } from '../../lib/cores'
-import { DIAS_SEMANA, type AreaConsistencia, type AtividadeConsistencia, type DiaSemanaConsistencia } from '../../lib/types'
+import {
+  DIAS_SEMANA,
+  type AreaConsistencia,
+  type AtividadeConsistencia,
+  type DiarioConsistencia,
+  type DiaSemanaConsistencia,
+  type NivelConsistencia,
+} from '../../lib/types'
 import { IconFlame } from '../icons'
 
 /** Uma linha por galho da árvore: trilho = planejado, preenchimento = concluído, na cor da área. */
@@ -159,6 +166,77 @@ export function TabelaAtividades({ atividades }: { atividades: AtividadeConsiste
           })}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+function taxaDosNiveis(niveis: NivelConsistencia[], de: number, ate: number): number | null {
+  const faixa = niveis.filter((nivel) => nivel.nivel >= de && nivel.nivel <= ate)
+  const planejado = faixa.reduce((soma, nivel) => soma + nivel.planejado, 0)
+  const concluido = faixa.reduce((soma, nivel) => soma + nivel.concluido, 0)
+  return planejado > 0 ? Math.round((concluido / planejado) * 100) : null
+}
+
+function BarrasPorNivel({ titulo, niveis }: { titulo: string; niveis: NivelConsistencia[] }) {
+  const baixa = taxaDosNiveis(niveis, 1, 2)
+  const alta = taxaDosNiveis(niveis, 4, 5)
+  return (
+    <div className="min-w-0 flex-1 space-y-3">
+      <p className="text-xs text-ink-faint">{titulo}</p>
+      <div
+        className="flex h-28 items-end gap-1.5"
+        role="img"
+        aria-label={`Taxa de conclusão por nível de ${titulo.toLowerCase()}`}
+      >
+        {niveis.map((nivel) => (
+          <div
+            key={nivel.nivel}
+            className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5"
+            title={`${nivel.dias} ${nivel.dias === 1 ? 'dia' : 'dias'} com ${titulo.toLowerCase()} ${nivel.nivel}`}
+          >
+            <span className="text-[11px] tabular-nums text-ink-faint transition-colors group-hover:text-ink">
+              {nivel.taxa === null ? '' : `${nivel.taxa}%`}
+            </span>
+            <div className="relative w-full max-w-8 flex-1 overflow-hidden rounded-[4px] bg-surface-3">
+              <div
+                className="absolute inset-x-0 bottom-0 rounded-[4px] transition-[height] duration-500 ease-out"
+                style={{
+                  height: `${nivel.taxa ?? 0}%`,
+                  backgroundColor: degrauDaTaxa(nivel.taxa === null ? null : Math.max(nivel.taxa, 1)),
+                }}
+              />
+            </div>
+            <span className="text-xs tabular-nums text-ink-muted">{nivel.nivel}</span>
+          </div>
+        ))}
+      </div>
+      {baixa !== null && alta !== null && baixa !== alta && (
+        <p className="text-xs text-ink-muted">
+          Com {titulo.toLowerCase()} alta você cumpre <span className="tabular-nums text-ink">{alta}%</span>; baixa,{' '}
+          <span className="tabular-nums text-ink">{baixa}%</span>.
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** Humor e energia do diário contra a taxa de conclusão dos mesmos dias. */
+export function DiarioXConsistencia({ dados }: { dados: DiarioConsistencia }) {
+  if (dados.diasRegistrados === 0) {
+    return (
+      <p className="text-sm text-ink-faint">
+        Registre humor e energia no diário da tela{' '}
+        <Link to="/" className="text-accent-strong hover:underline">
+          Hoje
+        </Link>{' '}
+        pra ver como eles se cruzam com a sua consistência.
+      </p>
+    )
+  }
+  return (
+    <div className="flex flex-col gap-6 sm:flex-row">
+      <BarrasPorNivel titulo="Humor" niveis={dados.porHumor} />
+      <BarrasPorNivel titulo="Energia" niveis={dados.porEnergia} />
     </div>
   )
 }

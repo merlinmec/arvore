@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { DiarioDoDia } from '../components/DiarioDoDia'
 import { IconCheck, IconChevronLeft, IconChevronRight, IconFlame, IconInbox, IconX } from '../components/icons'
 import { api } from '../lib/api'
 import { corDaArea } from '../lib/cores'
@@ -495,6 +496,8 @@ export function Hoje() {
               </section>
             )
           })}
+
+          <DiarioDoDia data={data} editavel={editavel} />
         </div>
 
         {itens.length > 0 && (
