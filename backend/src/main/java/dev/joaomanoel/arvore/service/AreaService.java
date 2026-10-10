@@ -30,6 +30,9 @@ public class AreaService {
     }
 
     public AreaDTO criar(CriarAreaRequest requisicao) {
+        if (requisicao.areaPaiId() != null && !areaRepository.existsById(requisicao.areaPaiId())) {
+            throw new NaoEncontradoException("Área pai não encontrada");
+        }
         Area area = new Area();
         area.setNome(requisicao.nome());
         area.setAreaPaiId(requisicao.areaPaiId());

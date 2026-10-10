@@ -83,7 +83,7 @@ Inspiração: Sunsama, Clockify, Habi.
 
 ### Fase 4 — Plataforma e qualidade
 
-- [x] **Testes de integração e CI** (09/10/2026): Testcontainers com Postgres real, passando pelo login JWT (autenticação e fluxo da tela Hoje); GitHub Actions roda os testes do backend, lint e build do frontend e o build das imagens. Faltam testes de Painel, Áreas e agenda
+- [x] **Testes de integração e CI** (09/10/2026): Testcontainers com Postgres real, passando pelo login JWT (autenticação e fluxo da tela Hoje); GitHub Actions roda os testes do backend, lint e build do frontend e o build das imagens. Em 10/10/2026 ganharam Painel (resumo, ranking, filtro com subáreas, histórico), Áreas (árvore, progresso, edição, exclusão em cascata) e agenda (grade versionada, meta semanal). O helper `recuarCriacao` leva a criação e as grades pro passado via JDBC, já que a API só cria no presente
 - [x] **`docker-compose.yml`** (09/10/2026) com Postgres, backend e frontend (nginx servindo o build e repassando `/api`)
 - [ ] PWA instalável e com cache offline da tela Hoje
 - [ ] Atalhos de teclado e command palette (`Ctrl+K`: ir pra área, marcar atividade)
