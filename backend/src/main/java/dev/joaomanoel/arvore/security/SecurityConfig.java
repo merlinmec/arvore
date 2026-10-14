@@ -34,10 +34,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         autorizacao ->
                                 autorizacao
-                                        .requestMatchers("/api/auth/**", "/error")
+                                        // /api/demo só existe no perfil demo; fora dele dá 404
+                                        .requestMatchers("/api/auth/**", "/api/demo/**", "/error")
                                         .permitAll()
+                                        .requestMatchers("/api/**")
+                                        .authenticated()
+                                        // o resto é o SPA, que o backend só serve na imagem da demo
                                         .anyRequest()
-                                        .authenticated())
+                                        .permitAll())
                 .exceptionHandling(
                         handling ->
                                 handling.authenticationEntryPoint(
