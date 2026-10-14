@@ -1,0 +1,36 @@
+# Produção no próprio computador (Windows/macOS/Linux com Docker Desktop). Complementa o
+# docker-compose.yml: a mesma stack, sempre de pé, com backup diário numa pasta do computador.
+# Uso e configuração única em docs/DEPLOY.md.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+#
+# Com restart: unless-stopped, os containers voltam sozinhos sempre que o Docker inicia.
+services:
+  db:
+    restart: unless-stopped
+
+  backend:
+    restart: unless-stopped
+
+  frontend:
+    restart: unless-stopped
+
+  backup:
+    image: postgres:16-alpine # mesma versão do db: o pg_dump não pode ser mais velho que o servidor
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGDATABASE: arvore
+      PGUSER: arvore
+      PGPASSWORD: ${POSTGRES_PASSWORD:-arvore}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-30}
+    volumes:
+      - ./deploy/backup.sh:/scripts/backup.sh:ro
+      # Os dumps vão para uma pasta do computador em vez de um volume do Docker: dá para abrir,
+      # copiar e, numa pasta sincronizada (OneDrive, Google Drive, Dropbox), ter cópia fora da
+      # máquina sem nada a mais.
+      - ${BACKUP_DIR:?defina BACKUP_DIR no .env (pasta dos backups no computador)}:/backups
+    entrypoint: ["sh", "/scripts/backup.sh"]

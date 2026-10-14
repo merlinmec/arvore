@@ -40,6 +40,8 @@ docker compose up --build
 
 O app abre em `http://localhost:8000` (mude com `PORTA` no `.env`). O nginx do frontend repassa `/api` pro backend, e os dados do Postgres ficam no volume `dados-postgres`.
 
+Para deixar o app sempre ligado no seu computador (sobe com o Docker, backup diário numa pasta e atualização automática quando o `master` muda), veja [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
 Para desenvolver com hot reload, siga as seções abaixo.
 
 ## Pré-requisitos
