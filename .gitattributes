@@ -1,0 +1,3 @@
+# Scripts que rodam dentro de containers Linux: sempre LF, mesmo clonando no Windows
+# (com CRLF o sh do container falha já na primeira linha). O mvnw está em backend/.gitattributes.
+*.sh text eol=lf
