@@ -1,0 +1,8 @@
+# Só vale para o build com contexto na raiz (Dockerfile.demo). O docker-compose.yml usa backend/ e
+# frontend/ como contexto.
+**/node_modules
+frontend/dist
+backend/target
+backend/src/main/resources/application-local.yml
+.git
+.env
