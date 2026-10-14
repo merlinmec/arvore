@@ -47,3 +47,5 @@ jobs:
         env:
           ARVORE_SENHA_HASH: ci
           ARVORE_JWT_SEGREDO: ci
+      # E a imagem única da demonstração pública (render.yaml), com o frontend dentro do backend.
+      - run: docker build -f Dockerfile.demo .

@@ -41,4 +41,10 @@ class AutenticacaoIntegracaoTest extends IntegracaoTest {
     void tokenDoLoginDaAcesso() throws Exception {
         mvc.perform(autenticado(get("/api/areas"))).andExpect(status().isOk());
     }
+
+    @Test
+    void foraDoPerfilDemoNaoHaDemonstracao() throws Exception {
+        mvc.perform(get("/api/demo/status")).andExpect(status().isNotFound());
+        mvc.perform(post("/api/demo/sessao")).andExpect(status().isNotFound());
+    }
 }

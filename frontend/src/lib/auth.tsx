@@ -13,6 +13,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(resposta.data.token)
   }
 
+  function entrarComToken(novo: string) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, novo)
+    setToken(novo)
+  }
+
   function sair() {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
     // a cópia offline das respostas da API não deve sobreviver ao logout
@@ -20,5 +25,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null)
   }
 
-  return <AuthContext.Provider value={{ token, entrar, sair }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ token, entrar, entrarComToken, sair }}>{children}</AuthContext.Provider>
 }

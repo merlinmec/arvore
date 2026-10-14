@@ -19,6 +19,8 @@ App de acompanhamento de áreas, objetivos e progresso pessoal. Backend em Sprin
 - **Paleta de comandos** (`Ctrl+K`): ir pra qualquer tela ou área e marcar as atividades de hoje pelo teclado; na tela Hoje, `←`/`→` trocam o dia
 - **Exclusão com desfazer**: atividade, objetivo e nota somem na hora, com alguns segundos pra desfazer (ou `Ctrl+Z`)
 
+**Demonstração pública:** o link `/demo` da versão hospedada cria uma árvore de exemplo só sua, com dez semanas de história, apagada em 24 h. Como funciona e como publicar de graça (Render + Neon): [`docs/DEMO.md`](docs/DEMO.md).
+
 Direção do produto, diretrizes e próximas fases: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Estrutura

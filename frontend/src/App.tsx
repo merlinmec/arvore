@@ -6,6 +6,7 @@ import { AuthProvider } from './lib/auth'
 import { DesfazerProvider } from './lib/desfazer'
 import { AreaDetalhe } from './pages/AreaDetalhe'
 import { Dados } from './pages/Dados'
+import { Demo } from './pages/Demo'
 import { Areas } from './pages/Areas'
 import { Hoje } from './pages/Hoje'
 import { Login } from './pages/Login'
@@ -31,6 +32,7 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/demo" element={<Demo />} />
               <Route element={<ProtectedRoute />}>
                 <Route element={<Layout />}>
                   <Route index element={<Hoje />} />

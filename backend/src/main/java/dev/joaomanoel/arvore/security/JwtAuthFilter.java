@@ -35,9 +35,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (cabecalho != null && cabecalho.startsWith(PREFIXO_BEARER)) {
             String token = cabecalho.substring(PREFIXO_BEARER.length());
             try {
-                String usuario = jwtService.extrairUsuario(token);
+                JwtService.Sessao sessao = jwtService.ler(token);
                 var autenticacao = new UsernamePasswordAuthenticationToken(
-                        usuario, null, List.of(new SimpleGrantedAuthority("ROLE_USUARIO")));
+                        sessao.usuario(), null, List.of(new SimpleGrantedAuthority("ROLE_USUARIO")));
+                // na demonstração, o schema do visitante (ver demo.FiltroDoVisitante)
+                autenticacao.setDetails(sessao.esquema());
                 SecurityContextHolder.getContext().setAuthentication(autenticacao);
             } catch (Exception ignorado) {
                 SecurityContextHolder.clearContext();
