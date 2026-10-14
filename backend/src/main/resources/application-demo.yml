@@ -1,0 +1,13 @@
+# Perfil da demonstração pública (SPRING_PROFILES_ACTIVE=demo). Passo a passo em docs/DEMO.md.
+# Sem ARVORE_SENHA_HASH o login de verdade nunca passa: só existem visitantes.
+
+server:
+  # o IP do visitante chega no X-Forwarded-For do proxy da hospedagem (limite por IP)
+  forward-headers-strategy: native
+
+arvore:
+  demo:
+    # cada visitante é um schema com dez semanas de dados; o banco gratuito tem 0,5 GB
+    max-visitantes: ${ARVORE_DEMO_MAX_VISITANTES:200}
+    por-ip-por-hora: ${ARVORE_DEMO_POR_IP_POR_HORA:10}
+    aquecer: true
